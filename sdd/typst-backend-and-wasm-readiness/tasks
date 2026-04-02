@@ -1,0 +1,14 @@
+# Tasks — typst-backend-and-wasm-readiness
+
+## Follow-up apply recovery
+
+- [x] Align cargo feature contracts with the change expectations by introducing `renderer-typst`, keeping `typst` as a compatibility alias, and validating the feature matrix.
+- [x] Remove the inward architecture dependency from `core` to `api` by moving render configuration types into `core`.
+- [x] Refactor the renderer adapter into split modules and improve the Typst backend to consume memory-backed image assets through in-memory Typst file resolution.
+- [x] Expand the error model for configuration and Typst-specific failures.
+- [x] Add/update feature-matrix validation coverage and a runnable validation harness.
+- [x] Re-run the apply validation gates and persist updated apply progress.
+
+## Notes
+
+- The filesystem only contained `apply-progress` for this change when the follow-up apply phase started, so this tasks artifact was reconstructed from the verification priorities supplied in the apply request.

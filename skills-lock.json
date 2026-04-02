@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "architecture-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "cf81f4523a2fd3017590cf2792fe305e4375d2f75d22037b92f05852e22feae2"
+    },
+    "mermaid": {
+      "source": "markdown-viewer/skills",
+      "sourceType": "github",
+      "computedHash": "2d2150dceb8524b9f9d11c303475183b5312dfc9d3b4deaa7d60f63ea2487953"
+    }
+  }
+}

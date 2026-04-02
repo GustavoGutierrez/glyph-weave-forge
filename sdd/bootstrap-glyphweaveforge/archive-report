@@ -1,0 +1,37 @@
+# Archive Report: bootstrap-glyphweaveforge
+
+**Project**: glyph-weave-forge  
+**Change**: bootstrap-glyphweaveforge  
+**Archived On**: 2026-03-31  
+**Archive Mode**: Engram + filesystem report
+
+## Delivered Scope
+- Bootstrapped the `glyphweaveforge` Rust crate with a clean staged structure across `api`, `pipeline`, `core`, and `adapters`.
+- Delivered fluent Markdown-to-PDF conversion covering path/text/bytes input, memory/file/directory output, theme/page options, typed errors, and adapter swap points.
+- Implemented markdown/resource/render fallbacks, feature flags (`fs`, `mermaid`, `math`), README guidance, and automated unit/integration coverage for the bootstrap behaviors.
+
+## Validation Status
+- Verification verdict: **PASS WITH WARNINGS**.
+- Task status: **18/18 complete**.
+- Compliance: **13/13 spec scenarios compliant**.
+- Quality gates passed: `cargo build`, `cargo fmt --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test`, `cargo test --all-features`, and `cargo doc --no-deps`.
+
+## Traceability
+- Proposal: Engram observation **#286** (`sdd/bootstrap-glyphweaveforge/proposal`)
+- Spec: Engram observation **#290** (`sdd/bootstrap-glyphweaveforge/spec`)
+- Design: Engram observation **#293** (`sdd/bootstrap-glyphweaveforge/design`)
+- Tasks: filesystem artifact `sdd/bootstrap-glyphweaveforge/tasks` (no matching Engram observation found during archive)
+- Apply progress: filesystem artifact `sdd/bootstrap-glyphweaveforge/apply-progress` (not required by archive skill; used as supporting evidence)
+- Verify report: Engram observation **#309** (`sdd/bootstrap-glyphweaveforge/verify-report`)
+
+## Remaining Non-Blocking Risks
+- Dependency direction is still looser than intended because `src/api/forge.rs` and `src/pipeline/convert.rs` instantiate concrete adapters directly.
+- The shipped renderer remains a minimal native backend instead of the design's planned Typst-specific adapter/file split.
+- Suggested hardening remains open: add doc comments to exported types, add an explicit non-mermaid code-fence integration test, and introduce coverage tooling if future gates require numeric thresholds.
+- Historical traceability is slightly incomplete because the tasks artifact was available on disk but did not have a matching Engram observation at archive time.
+
+## Recommended Next Change
+Tighten the composition boundary by extracting concrete adapter wiring out of the API/pipeline path into a dedicated composition layer, then align docs/tests with the Rust standards by adding public API doc comments and an explicit generic fenced-code integration test.
+
+## Archive Decision
+The change is archived as complete because verification reported no critical issues, all planned tasks are complete, and all required spec scenarios passed. Remaining items are follow-up improvements rather than blockers.

@@ -1,0 +1,39 @@
+## Implementation Progress
+
+**Change**: bootstrap-glyphweaveforge
+**Mode**: Standard
+
+### Completed Tasks
+- [x] Reconciled the tasks artifact and created a filesystem copy that reflects implementation status.
+- [x] Refactored the crate into `api -> pipeline -> core -> adapters` modules with a core-owned document IR and public renderer/resource ports.
+- [x] Expanded Markdown semantic handling for lists, quotes, links, emphasis, images, unsupported-table fallback, and deterministic visible placeholders.
+- [x] Corrected Mermaid behavior to be standard fenced fallback by default and feature-sensitive when `mermaid` is enabled.
+- [x] Added unit and integration tests for runtime fallbacks, unsupported markdown, theme/page behavior, and renderer swapping.
+- [x] Added Cargo feature flags (`fs`, `mermaid`, `math`) plus README guidance and reran the requested quality gates.
+
+### Files Changed
+- `Cargo.toml`
+- `README.md`
+- `src/lib.rs`
+- `src/api/*`
+- `src/core/*`
+- `src/pipeline/*`
+- `src/adapters/*`
+- `src/tests.rs`
+- `tests/api_smoke.rs`
+- `tests/pdf_integration.rs`
+- `sdd/bootstrap-glyphweaveforge/tasks`
+- `sdd/bootstrap-glyphweaveforge/apply-progress`
+
+### Deviations from Design
+- Kept the lightweight native PDF backend instead of introducing Typst right now, but moved rendering behind a core-owned `RenderBackend` port so the planned backend swap remains clean.
+
+### Issues Found
+- Original on-disk SDD artifacts were missing, so this apply phase recreated the relevant task/progress artifacts locally while also updating Engram.
+
+### Remaining Tasks
+- [ ] Add a richer renderer adapter such as Typst if the project decides to accept the heavier dependency surface.
+- [ ] Expand unsupported-markdown fallback coverage beyond tables/footnotes if the spec grows further.
+
+### Status
+18/18 tasks complete. Ready for verify.
