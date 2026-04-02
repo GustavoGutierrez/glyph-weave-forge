@@ -23,6 +23,10 @@ fn crate_root_docs() -> &'static str {
     include_str!("../src/lib.rs")
 }
 
+fn agents_guidance() -> &'static str {
+    include_str!("../AGENTS.md")
+}
+
 #[cfg(feature = "fs")]
 #[test]
 fn path_bytes_and_text_inputs_work() {
@@ -111,7 +115,8 @@ fn manifest_keeps_required_publication_metadata_honest() {
 
     for required_field in [
         "description = ",
-        "license-file = \"LICENSE\"",
+        "license = \"Apache-2.0\"",
+        "rust-version = \"1.85\"",
         "repository = \"https://github.com/GustavoGutierrez/glyph-weave-forge\"",
         "readme = \"README.md\"",
         "documentation = \"https://docs.rs/glyphweaveforge\"",
@@ -126,6 +131,7 @@ fn manifest_keeps_required_publication_metadata_honest() {
 
     assert!(!manifest.contains("browser"));
     assert!(!manifest.contains("latex"));
+    assert!(!manifest.contains("/home/"));
 }
 
 #[test]
@@ -159,6 +165,43 @@ fn public_docs_describe_real_features_and_limitations() {
     }
 
     assert!(crate_docs.contains("include_str!(\"../README.md\")"));
+}
+
+#[test]
+fn public_artifacts_do_not_embed_local_machine_paths() {
+    for public_text in [cargo_manifest(), crate_docs_source(), crate_root_docs()] {
+        for forbidden in [
+            "/home/",
+            "/Users/",
+            "C:\\\\",
+            ".config/opencode",
+            "/.cargo/",
+            "meridian",
+        ] {
+            assert!(
+                !public_text.contains(forbidden),
+                "public artifact should not contain {forbidden}"
+            );
+        }
+    }
+}
+
+#[test]
+fn agents_file_documents_security_and_publication_hygiene() {
+    let agents = agents_guidance();
+
+    for expected in [
+        "api -> pipeline -> core -> adapters",
+        "Public-facing crate documentation must stay in **English**.",
+        "Never publish secrets, tokens, credentials, private keys, or local environment details.",
+        "Do not add absolute filesystem paths",
+        "cargo publish --dry-run",
+    ] {
+        assert!(
+            agents.contains(expected),
+            "AGENTS.md should contain {expected}"
+        );
+    }
 }
 
 #[test]

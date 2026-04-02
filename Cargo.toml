@@ -2,8 +2,9 @@
 name = "glyphweaveforge"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.85"
 description = "Convert Markdown into PDF through an explicit Rust pipeline with minimal and Typst backends."
-license-file = "LICENSE"
+license = "Apache-2.0"
 repository = "https://github.com/GustavoGutierrez/glyph-weave-forge"
 homepage = "https://github.com/GustavoGutierrez/glyph-weave-forge"
 readme = "README.md"
@@ -12,7 +13,6 @@ keywords = ["markdown", "pdf", "converter", "typst"]
 categories = ["text-processing", "rendering"]
 include = [
     "/Cargo.toml",
-    "/Cargo.lock",
     "/LICENSE",
     "/README.md",
     "/logo.png",
