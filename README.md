@@ -24,14 +24,14 @@ The crate ships a lightweight built-in renderer by default and can optionally us
 
 ```toml
 [dependencies]
-glyphweaveforge = "0.1.2"
+glyphweaveforge = "0.1.3"
 ```
 
 Enable optional features when you need them:
 
 ```toml
 [dependencies]
-glyphweaveforge = { version = "0.1.2", features = ["renderer-typst"] }
+glyphweaveforge = { version = "0.1.3", features = ["renderer-typst"] }
 ```
 
 ## Main builder flow
@@ -194,6 +194,8 @@ Supported today:
 - thematic breaks
 - fenced code blocks
 - images, including injected resolvers and memory-backed assets
+- basic HTML `<img>` tags with `src`/`alt`
+- tables
 
 Resource handling behavior:
 
@@ -203,12 +205,12 @@ Resource handling behavior:
 
 Unsupported advanced Markdown stays visible instead of silently disappearing. Examples include:
 
-- tables
 - footnotes
 - Mermaid diagrams
 - math fences
+- unsupported raw HTML beyond basic `<img>` extraction
 
-These paths render deterministic fallback labels with the original content preserved in the output.
+These paths render deterministic fallback labels with the original content preserved in the output when possible.
 
 ## Extending the crate
 
@@ -273,7 +275,8 @@ The rendering request/asset helper types exposed for adapters are:
 
 - This crate does **not** claim real Mermaid diagram rendering.
 - This crate does **not** claim real TeX/LaTeX or advanced math typesetting.
-- Advanced Markdown such as tables and footnotes is exposed through visible fallback text, not full layout support.
+- Footnotes are exposed through visible fallback text rather than full layout support.
+- General raw HTML is not a full rendering target; basic `<img>` extraction is supported, but broader HTML layout is not.
 - The minimal renderer writes a compact PDF text stream; it is designed for deterministic output and testability rather than rich page design.
 - `renderer-typst` is optional; docs.rs for the default documentation build does not require Typst support to use the crate.
 

@@ -6,10 +6,17 @@ fn pdf_text(bytes: &[u8]) -> String {
 
 #[test]
 fn unsupported_markdown_and_standard_semantics_survive_rendering() {
-    let markdown = "# Title\n\n- *one*\n- **two**\n\n> quote [link](https://example.com)\n\n| a | b |\n| - | - |\n| 1 | 2 |";
+    let markdown = "# Title\n\n- *one*\n- **two**\n\n> quote [link](https://example.com)\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\n<img src=\"logo.png\" alt=\"HTML logo\" />";
     let result = Forge::new()
         .from_text(markdown)
         .to_memory()
+        .with_resource_resolver(|path| {
+            if path == "logo.png" {
+                Ok(vec![1, 2, 3])
+            } else {
+                Err(std::io::Error::new(std::io::ErrorKind::NotFound, "missing"))
+            }
+        })
         .convert()
         .expect("conversion should succeed");
 
@@ -18,7 +25,10 @@ fn unsupported_markdown_and_standard_semantics_survive_rendering() {
     assert!(text.contains("- **two**"));
     assert!(text.contains("> quote"));
     assert!(text.contains("https://example.com"));
-    assert!(text.contains("Unsupported table fallback"));
+    assert!(text.contains("a | b"));
+    assert!(text.contains("1 | 2"));
+    assert!(text.contains("Image: HTML logo | png"));
+    assert!(!text.contains("Unsupported table"));
 }
 
 #[test]

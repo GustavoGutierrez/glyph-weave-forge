@@ -18,6 +18,11 @@ pub enum Block {
         ordered: bool,
         items: Vec<Vec<Inline>>,
     },
+    Table {
+        alignments: Vec<TableAlignment>,
+        headers: Vec<Vec<Inline>>,
+        rows: Vec<Vec<Vec<Inline>>>,
+    },
     Quote {
         content: Vec<Inline>,
     },
@@ -39,6 +44,14 @@ pub enum Block {
         raw: String,
     },
     ThematicBreak,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TableAlignment {
+    None,
+    Left,
+    Center,
+    Right,
 }
 
 #[derive(Debug, Clone, PartialEq)]

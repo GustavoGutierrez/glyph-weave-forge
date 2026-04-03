@@ -231,6 +231,9 @@ fn document_to_elements(document: &Document, theme: &ThemeProfile) -> Vec<Render
                 }
                 elements.push(RenderElement::Line(blank_line(theme.body_font_size_pt)));
             }
+            Block::Table { headers, rows, .. } => {
+                render_table_block(&mut elements, headers, rows, theme);
+            }
             Block::Quote { content } => {
                 for line in inline_text(content).split('\n') {
                     elements.push(RenderElement::Line(RenderLine {
@@ -307,6 +310,44 @@ fn render_code_block(
         lines: code.lines().map(ToOwned::to_owned).collect(),
         font_size_pt: theme.code_font_size_pt,
     }));
+}
+
+fn render_table_block(
+    elements: &mut Vec<RenderElement>,
+    headers: &[Vec<Inline>],
+    rows: &[Vec<Vec<Inline>>],
+    theme: &ThemeProfile,
+) {
+    if !headers.is_empty() {
+        elements.push(RenderElement::Line(RenderLine {
+            text: join_table_row(headers),
+            font_size_pt: theme.body_font_size_pt,
+        }));
+        elements.push(RenderElement::Line(RenderLine {
+            text: headers
+                .iter()
+                .map(|cell| "-".repeat(inline_text(cell).len().max(3)))
+                .collect::<Vec<_>>()
+                .join(" | "),
+            font_size_pt: theme.code_font_size_pt,
+        }));
+    }
+
+    for row in rows {
+        elements.push(RenderElement::Line(RenderLine {
+            text: join_table_row(row),
+            font_size_pt: theme.body_font_size_pt,
+        }));
+    }
+
+    elements.push(RenderElement::Line(blank_line(theme.body_font_size_pt)));
+}
+
+fn join_table_row(row: &[Vec<Inline>]) -> String {
+    row.iter()
+        .map(|cell| inline_text(cell))
+        .collect::<Vec<_>>()
+        .join(" | ")
 }
 
 fn render_image(alt: &str, asset: &ResolvedAsset) -> Option<RenderImage> {

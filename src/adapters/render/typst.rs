@@ -4,7 +4,7 @@ use typst_as_lib::typst_kit_options::TypstKitFontOptions;
 
 use crate::adapters::render::plan::{ThemeProfile, page_spec, resolve_theme};
 use crate::core::ports::{RenderBackend, RenderRequest, ResolvedAsset, ResourceStatus};
-use crate::core::{Block, Document, ForgeError, Inline, Result};
+use crate::core::{Block, Document, ForgeError, Inline, Result, TableAlignment};
 
 #[derive(Debug, Default)]
 pub struct TypstPdfRenderer;
@@ -133,6 +133,10 @@ fn build_typst_source(
     ));
     source.push_str("#show emph: set text(style: \"italic\")\n");
     source.push_str(&format!(
+        "#show table.cell.where(y: 0): set text(weight: \"bold\", fill: rgb(\"{}\"))\n",
+        theme.heading_color
+    ));
+    source.push_str(&format!(
         "#show link: set text(fill: rgb(\"{}\"))\n\n",
         theme.accent_color
     ));
@@ -155,6 +159,11 @@ fn render_block(
             Ok(format!("{}\n\n", render_markup(content, theme, assets)?))
         }
         Block::List { ordered, items } => render_list(*ordered, items, theme, assets),
+        Block::Table {
+            alignments,
+            headers,
+            rows,
+        } => render_table_block(alignments, headers, rows, theme, assets),
         Block::Quote { content } => Ok(format!(
             "#block(fill: rgb(\"{}\"), inset: 10pt, radius: 6pt, width: 100%)[{}]\n\n",
             theme.quote_background,
@@ -215,6 +224,75 @@ fn render_list(
     Ok(out)
 }
 
+fn render_table_block(
+    alignments: &[TableAlignment],
+    headers: &[Vec<Inline>],
+    rows: &[Vec<Vec<Inline>>],
+    theme: &ThemeProfile,
+    assets: &mut TypstAssetLibrary,
+) -> Result<String> {
+    let column_count = headers
+        .len()
+        .max(rows.iter().map(|row| row.len()).max().unwrap_or(0));
+    if column_count == 0 {
+        return Ok(String::new());
+    }
+
+    let mut out = format!(
+        "#table(columns: {column_count}, stroke: 0.5pt + rgb(\"{}\"), inset: 8pt, fill: (_, y) => if y == 0 {{ rgb(\"{}\") }} else if calc.rem(y, 2) == 1 {{ rgb(\"{}\") }} else {{ white }},\n",
+        theme.muted_color, theme.quote_background, theme.code_background,
+    );
+
+    if !headers.is_empty() {
+        out.push_str("  table.header");
+        for (index, header) in headers.iter().enumerate() {
+            out.push_str(&render_table_cell(
+                header,
+                alignments
+                    .get(index)
+                    .copied()
+                    .unwrap_or(TableAlignment::None),
+                theme,
+                assets,
+            )?);
+        }
+        out.push_str(",\n");
+    }
+
+    for row in rows {
+        for (index, cell) in row.iter().enumerate() {
+            out.push_str("  ");
+            out.push_str(&render_table_cell(
+                cell,
+                alignments
+                    .get(index)
+                    .copied()
+                    .unwrap_or(TableAlignment::None),
+                theme,
+                assets,
+            )?);
+            out.push_str(",\n");
+        }
+
+        for index in row.len()..column_count {
+            out.push_str("  ");
+            out.push_str(&render_table_cell(
+                &[],
+                alignments
+                    .get(index)
+                    .copied()
+                    .unwrap_or(TableAlignment::None),
+                theme,
+                assets,
+            )?);
+            out.push_str(",\n");
+        }
+    }
+
+    out.push_str(")\n\n");
+    Ok(out)
+}
+
 fn render_code_block(language: Option<&str>, code: &str, theme: &ThemeProfile) -> String {
     let label = escape_markup_text(language.unwrap_or("text"));
     format!(
@@ -248,6 +326,26 @@ fn render_notice_block(title: &str, body: &str, theme: &ThemeProfile) -> String 
         escape_markup_text(title),
         escape_markup_text(body)
     )
+}
+
+fn render_table_cell(
+    content: &[Inline],
+    alignment: TableAlignment,
+    theme: &ThemeProfile,
+    assets: &mut TypstAssetLibrary,
+) -> Result<String> {
+    let body = render_markup(content, theme, assets)?;
+    let cell = if body.is_empty() {
+        "[]".to_owned()
+    } else {
+        format!("[{body}]")
+    };
+
+    Ok(match alignment {
+        TableAlignment::None | TableAlignment::Left => cell,
+        TableAlignment::Center => format!("[#align(center){cell}]"),
+        TableAlignment::Right => format!("[#align(right){cell}]"),
+    })
 }
 
 fn render_markup(

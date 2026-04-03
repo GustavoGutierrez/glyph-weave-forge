@@ -34,6 +34,28 @@ fn parser_preserves_lists_quotes_links_and_emphasis() {
     assert!(matches!(document.blocks[2], Block::Quote { .. }));
 }
 
+#[test]
+fn parser_preserves_standard_tables() {
+    let document = PulldownParser
+        .parse("| Name | Docs |\n| --- | --- |\n| GlyphWeaveForge | [site](https://example.com) |")
+        .expect("parse should succeed");
+
+    assert!(matches!(document.blocks[0], Block::Table { .. }));
+}
+
+#[test]
+fn parser_promotes_basic_html_img_tags() {
+    let document = PulldownParser
+        .parse("<img src=\"logo.png\" alt=\"Logo HTML\" width=\"120\" />")
+        .expect("parse should succeed");
+
+    assert!(matches!(
+        &document.blocks[0],
+        Block::Paragraph { content }
+            if matches!(content.as_slice(), [Inline::Image { alt, target }] if alt == "Logo HTML" && target == "logo.png")
+    ));
+}
+
 #[cfg(feature = "fs")]
 #[test]
 fn output_names_remain_deterministic() {
@@ -176,6 +198,25 @@ fn inline_images_use_custom_resolver() {
 }
 
 #[test]
+fn html_img_tags_use_custom_resolver() {
+    let result = Forge::new()
+        .from_text("<img src=\"logo.png\" alt=\"Logo HTML\" width=\"160\" />")
+        .to_memory()
+        .with_resource_resolver(|path| {
+            if path == "logo.png" {
+                Ok(vec![1, 2, 3])
+            } else {
+                Err(io::Error::new(io::ErrorKind::NotFound, "missing"))
+            }
+        })
+        .convert()
+        .expect("conversion should succeed");
+
+    let text = pdf_text(&result.bytes.expect("bytes should exist"));
+    assert!(text.contains("Image: Logo HTML | png | loaded through custom resource resolver"));
+}
+
+#[test]
 fn default_mermaid_behavior_is_non_lossy_fallback() {
     let result = Forge::new()
         .from_text("```mermaid\ngraph TD\n```")
@@ -191,13 +232,27 @@ fn default_mermaid_behavior_is_non_lossy_fallback() {
 #[test]
 fn unsupported_markdown_becomes_visible_fallback() {
     let result = Forge::new()
-        .from_text("| a | b |\n| - | - |\n| 1 | 2 |")
+        .from_text("alpha[^1]\n\n[^1]: visible note")
         .to_memory()
         .convert()
         .expect("conversion should succeed");
 
     let text = pdf_text(&result.bytes.expect("bytes should exist"));
-    assert!(text.contains("Unsupported table fallback"));
+    assert!(text.contains("Unsupported footnote fallback"));
+}
+
+#[test]
+fn standard_tables_render_visible_rows() {
+    let result = Forge::new()
+        .from_text("| a | b |\n| --- | --- |\n| 1 | 2 |")
+        .to_memory()
+        .convert()
+        .expect("conversion should succeed");
+
+    let text = pdf_text(&result.bytes.expect("bytes should exist"));
+    assert!(text.contains("a | b"));
+    assert!(text.contains("1 | 2"));
+    assert!(!text.contains("Unsupported table"));
 }
 
 #[cfg(feature = "fs")]

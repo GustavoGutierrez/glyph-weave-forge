@@ -1,7 +1,7 @@
-use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{Alignment, CodeBlockKind, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 
 use crate::core::ports::MarkdownParser;
-use crate::core::{Block, Document, Inline, Result};
+use crate::core::{Block, Document, Inline, Result, TableAlignment};
 
 #[derive(Debug, Default)]
 pub struct PulldownParser;
@@ -57,6 +57,27 @@ struct ListState {
     current_item: Vec<Inline>,
 }
 
+#[derive(Debug)]
+struct TableState {
+    alignments: Vec<TableAlignment>,
+    headers: Vec<Vec<Inline>>,
+    rows: Vec<Vec<Vec<Inline>>>,
+    current_row: Vec<Vec<Inline>>,
+    in_head: bool,
+}
+
+impl TableState {
+    fn new(alignments: Vec<TableAlignment>) -> Self {
+        Self {
+            alignments,
+            headers: Vec::new(),
+            rows: Vec::new(),
+            current_row: Vec::new(),
+            in_head: false,
+        }
+    }
+}
+
 impl ListState {
     fn new(ordered: bool) -> Self {
         Self {
@@ -82,6 +103,7 @@ fn parse_document(markdown: &str) -> Document {
     let mut quote_depth = 0usize;
     let mut unsupported: Option<UnsupportedCapture> = None;
     let mut code_block: Option<(Option<String>, String)> = None;
+    let mut table_state: Option<TableState> = None;
 
     let options = Options::ENABLE_TABLES
         | Options::ENABLE_STRIKETHROUGH
@@ -91,10 +113,10 @@ fn parse_document(markdown: &str) -> Document {
     for event in Parser::new_ext(markdown, options) {
         if let Some(capture) = unsupported.as_mut() {
             match &event {
-                Event::Start(Tag::Table(_)) | Event::Start(Tag::FootnoteDefinition(_)) => {
+                Event::Start(Tag::FootnoteDefinition(_)) => {
                     capture.depth += 1;
                 }
-                Event::End(TagEnd::Table) | Event::End(TagEnd::FootnoteDefinition) => {
+                Event::End(TagEnd::FootnoteDefinition) => {
                     if capture.depth == 0 {
                         blocks.push(Block::Unsupported {
                             kind: capture.kind.to_owned(),
@@ -107,6 +129,15 @@ fn parse_document(markdown: &str) -> Document {
                 }
                 _ => capture.raw.push_str(event_to_text(&event)),
             }
+            continue;
+        }
+
+        if handle_table_event(
+            event.clone(),
+            &mut table_state,
+            &mut inline_state,
+            &mut blocks,
+        ) {
             continue;
         }
 
@@ -231,9 +262,26 @@ fn parse_document(markdown: &str) -> Document {
                     }));
                 }
             }
-            Event::Text(text) | Event::Html(text) | Event::InlineHtml(text) => {
+            Event::Text(text) => {
                 if let Some(state) = inline_state.as_mut() {
                     state.push(Inline::Text(text.to_string()));
+                }
+            }
+            Event::Html(text) | Event::InlineHtml(text) => {
+                if let Some(image) = parse_html_image_tag(text.as_ref()) {
+                    if let Some(state) = inline_state.as_mut() {
+                        state.push(image);
+                    } else {
+                        blocks.push(Block::Paragraph {
+                            content: vec![image],
+                        });
+                    }
+                } else if let Some(state) = inline_state.as_mut() {
+                    state.push(Inline::Text(text.to_string()));
+                } else if !text.trim().is_empty() {
+                    blocks.push(Block::Paragraph {
+                        content: vec![Inline::Text(text.to_string())],
+                    });
                 }
             }
             Event::Code(code) => {
@@ -256,12 +304,10 @@ fn parse_document(markdown: &str) -> Document {
                     state.push(Inline::Code(text.to_string()));
                 }
             }
-            Event::Start(Tag::Table(_)) => {
-                unsupported = Some(UnsupportedCapture {
-                    kind: "table",
-                    depth: 0,
-                    raw: String::new(),
-                });
+            Event::Start(Tag::Table(alignments)) => {
+                table_state = Some(TableState::new(
+                    alignments.into_iter().map(map_alignment).collect(),
+                ));
             }
             Event::Start(Tag::FootnoteDefinition(_)) => {
                 unsupported = Some(UnsupportedCapture {
@@ -282,6 +328,118 @@ fn append_inline_run(target: &mut Vec<Inline>, mut content: Vec<Inline>) {
         target.push(Inline::Text(" ".to_owned()));
     }
     target.append(&mut content);
+}
+
+fn handle_table_event(
+    event: Event<'_>,
+    table_state: &mut Option<TableState>,
+    inline_state: &mut Option<InlineState>,
+    blocks: &mut Vec<Block>,
+) -> bool {
+    let Some(table) = table_state.as_mut() else {
+        return false;
+    };
+
+    match event {
+        Event::Start(Tag::TableHead) => {
+            table.in_head = true;
+            table.current_row.clear();
+        }
+        Event::End(TagEnd::TableHead) => {
+            table.headers = std::mem::take(&mut table.current_row);
+            table.in_head = false;
+        }
+        Event::Start(Tag::TableRow) => {
+            table.current_row.clear();
+        }
+        Event::End(TagEnd::TableRow) => {
+            if !table.in_head && !table.current_row.is_empty() {
+                table.rows.push(std::mem::take(&mut table.current_row));
+            }
+        }
+        Event::Start(Tag::TableCell) => {
+            *inline_state = Some(InlineState::new());
+        }
+        Event::End(TagEnd::TableCell) => {
+            if let Some(state) = inline_state.take() {
+                table.current_row.push(state.finish());
+            }
+        }
+        Event::Start(Tag::Emphasis) => push_frame(inline_state, InlineFrame::Emphasis(Vec::new())),
+        Event::End(TagEnd::Emphasis) => pop_frame(inline_state),
+        Event::Start(Tag::Strong) => push_frame(inline_state, InlineFrame::Strong(Vec::new())),
+        Event::End(TagEnd::Strong) => pop_frame(inline_state),
+        Event::Start(Tag::Link { dest_url, .. }) => push_frame(
+            inline_state,
+            InlineFrame::Link {
+                target: dest_url.to_string(),
+                label: Vec::new(),
+            },
+        ),
+        Event::End(TagEnd::Link) => pop_frame(inline_state),
+        Event::Start(Tag::Image { dest_url, .. }) => push_frame(
+            inline_state,
+            InlineFrame::Image {
+                target: dest_url.to_string(),
+                alt: String::new(),
+            },
+        ),
+        Event::End(TagEnd::Image) => pop_frame(inline_state),
+        Event::Text(text) => {
+            if let Some(state) = inline_state.as_mut() {
+                state.push(Inline::Text(text.to_string()));
+            }
+        }
+        Event::Html(text) | Event::InlineHtml(text) => {
+            if let Some(state) = inline_state.as_mut() {
+                if let Some(image) = parse_html_image_tag(text.as_ref()) {
+                    state.push(image);
+                } else {
+                    state.push(Inline::Text(text.to_string()));
+                }
+            }
+        }
+        Event::Code(code) => {
+            if let Some(state) = inline_state.as_mut() {
+                state.push(Inline::Code(code.to_string()));
+            }
+        }
+        Event::SoftBreak => {
+            if let Some(state) = inline_state.as_mut() {
+                state.push(Inline::SoftBreak);
+            }
+        }
+        Event::HardBreak => {
+            if let Some(state) = inline_state.as_mut() {
+                state.push(Inline::HardBreak);
+            }
+        }
+        Event::InlineMath(text) | Event::DisplayMath(text) => {
+            if let Some(state) = inline_state.as_mut() {
+                state.push(Inline::Code(text.to_string()));
+            }
+        }
+        Event::TaskListMarker(checked) => {
+            if let Some(state) = inline_state.as_mut() {
+                state.push(Inline::Text(if checked {
+                    "[x] ".to_owned()
+                } else {
+                    "[ ] ".to_owned()
+                }));
+            }
+        }
+        Event::End(TagEnd::Table) => {
+            let table = table_state.take().expect("table state should exist");
+            blocks.push(Block::Table {
+                alignments: table.alignments,
+                headers: table.headers,
+                rows: table.rows,
+            });
+        }
+        _ => {}
+    }
+
+    true
 }
 
 fn push_frame(state: &mut Option<InlineState>, frame: InlineFrame) {
@@ -341,5 +499,51 @@ fn map_heading_level(level: HeadingLevel) -> u8 {
         HeadingLevel::H4 => 4,
         HeadingLevel::H5 => 5,
         HeadingLevel::H6 => 6,
+    }
+}
+
+fn map_alignment(alignment: Alignment) -> TableAlignment {
+    match alignment {
+        Alignment::None => TableAlignment::None,
+        Alignment::Left => TableAlignment::Left,
+        Alignment::Center => TableAlignment::Center,
+        Alignment::Right => TableAlignment::Right,
+    }
+}
+
+fn parse_html_image_tag(html: &str) -> Option<Inline> {
+    let trimmed = html.trim();
+    if !trimmed.starts_with('<') || !trimmed.ends_with('>') {
+        return None;
+    }
+
+    let lowercase = trimmed.to_ascii_lowercase();
+    if !lowercase.starts_with("<img") {
+        return None;
+    }
+
+    let target = extract_html_attr(trimmed, "src")?;
+    let alt = extract_html_attr(trimmed, "alt").unwrap_or_else(|| "Image".to_owned());
+
+    Some(Inline::Image { alt, target })
+}
+
+fn extract_html_attr(tag: &str, attr_name: &str) -> Option<String> {
+    let lowercase = tag.to_ascii_lowercase();
+    let needle = format!("{attr_name}=");
+    let start = lowercase.find(&needle)? + needle.len();
+    let rest = &tag[start..].trim_start();
+    let mut chars = rest.chars();
+    let first = chars.next()?;
+
+    if first == '"' || first == '\'' {
+        let quote = first;
+        let value: String = chars.take_while(|ch| *ch != quote).collect();
+        if value.is_empty() { None } else { Some(value) }
+    } else {
+        let mut value = String::new();
+        value.push(first);
+        value.extend(chars.take_while(|ch| !ch.is_whitespace() && *ch != '>' && *ch != '/'));
+        if value.is_empty() { None } else { Some(value) }
     }
 }

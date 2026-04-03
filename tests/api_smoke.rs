@@ -154,9 +154,11 @@ fn public_docs_describe_real_features_and_limitations() {
         "renderer-typst",
         "renderer-minimal",
         "with_resource_resolver",
+        "basic HTML `<img>` tags with `src`/`alt`",
+        "- tables",
         "does **not** add real Mermaid rendering",
         "does **not** add real math layout",
-        "Advanced Markdown such as tables and footnotes is exposed through visible fallback text",
+        "broader HTML layout is not",
     ] {
         assert!(
             readme.contains(truthful_claim),

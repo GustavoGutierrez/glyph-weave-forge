@@ -141,9 +141,10 @@ fn resolve_document_resources(
                     }
                 }
             }
-            Block::Quote { .. } | Block::Heading { .. } | Block::List { .. } => {
-                resolve_nested_block(block, resolver, ctx)?
-            }
+            Block::Quote { .. }
+            | Block::Heading { .. }
+            | Block::List { .. }
+            | Block::Table { .. } => resolve_nested_block(block, resolver, ctx)?,
             _ => {}
         }
     }
@@ -162,6 +163,17 @@ fn resolve_nested_block(
         Block::List { items, .. } => {
             for item in items {
                 resolve_inlines(item, resolver, ctx)?;
+            }
+            Ok(())
+        }
+        Block::Table { headers, rows, .. } => {
+            for header in headers {
+                resolve_inlines(header, resolver, ctx)?;
+            }
+            for row in rows {
+                for cell in row {
+                    resolve_inlines(cell, resolver, ctx)?;
+                }
             }
             Ok(())
         }
