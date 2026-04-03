@@ -24,14 +24,14 @@ The crate ships a lightweight built-in renderer by default and can optionally us
 
 ```toml
 [dependencies]
-glyphweaveforge = "0.1.1"
+glyphweaveforge = "0.1.2"
 ```
 
 Enable optional features when you need them:
 
 ```toml
 [dependencies]
-glyphweaveforge = { version = "0.1.1", features = ["renderer-typst"] }
+glyphweaveforge = { version = "0.1.2", features = ["renderer-typst"] }
 ```
 
 ## Main builder flow

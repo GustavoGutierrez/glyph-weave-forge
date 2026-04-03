@@ -12,6 +12,15 @@ pub(crate) struct ThemeProfile {
     pub(crate) code_font_size_pt: f32,
     pub(crate) heading_scale: f32,
     pub(crate) margin_mm: f32,
+    pub(crate) body_font: String,
+    pub(crate) heading_font: String,
+    pub(crate) code_font: String,
+    pub(crate) body_color: String,
+    pub(crate) muted_color: String,
+    pub(crate) heading_color: String,
+    pub(crate) accent_color: String,
+    pub(crate) code_background: String,
+    pub(crate) quote_background: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -369,7 +378,7 @@ fn blank_line(font_size_pt: f32) -> RenderLine {
     }
 }
 
-fn resolve_theme(theme: &ThemeConfig) -> ThemeProfile {
+pub(crate) fn resolve_theme(theme: &ThemeConfig) -> ThemeProfile {
     let built_in = theme.built_in.unwrap_or(BuiltInTheme::Professional);
     let mut profile = match built_in {
         BuiltInTheme::Invoice => ThemeProfile {
@@ -378,6 +387,15 @@ fn resolve_theme(theme: &ThemeConfig) -> ThemeProfile {
             code_font_size_pt: 9.5,
             heading_scale: 1.35,
             margin_mm: 18.0,
+            body_font: "DejaVu Serif".to_owned(),
+            heading_font: "DejaVu Sans".to_owned(),
+            code_font: "DejaVu Sans Mono".to_owned(),
+            body_color: "3B2F2F".to_owned(),
+            muted_color: "7A5C4F".to_owned(),
+            heading_color: "7C2D12".to_owned(),
+            accent_color: "B45309".to_owned(),
+            code_background: "FFF7ED".to_owned(),
+            quote_background: "FFEDD5".to_owned(),
         },
         BuiltInTheme::ScientificArticle => ThemeProfile {
             name: "scientific-article".to_owned(),
@@ -385,6 +403,15 @@ fn resolve_theme(theme: &ThemeConfig) -> ThemeProfile {
             code_font_size_pt: 9.0,
             heading_scale: 1.4,
             margin_mm: 20.0,
+            body_font: "DejaVu Serif".to_owned(),
+            heading_font: "DejaVu Serif".to_owned(),
+            code_font: "DejaVu Sans Mono".to_owned(),
+            body_color: "1F2933".to_owned(),
+            muted_color: "52606D".to_owned(),
+            heading_color: "102A43".to_owned(),
+            accent_color: "1F5F8B".to_owned(),
+            code_background: "F5F7FA".to_owned(),
+            quote_background: "EEF4F7".to_owned(),
         },
         BuiltInTheme::Professional => ThemeProfile {
             name: "professional".to_owned(),
@@ -392,6 +419,15 @@ fn resolve_theme(theme: &ThemeConfig) -> ThemeProfile {
             code_font_size_pt: 9.5,
             heading_scale: 1.45,
             margin_mm: 18.0,
+            body_font: "DejaVu Serif".to_owned(),
+            heading_font: "DejaVu Sans".to_owned(),
+            code_font: "DejaVu Sans Mono".to_owned(),
+            body_color: "243B53".to_owned(),
+            muted_color: "486581".to_owned(),
+            heading_color: "102A43".to_owned(),
+            accent_color: "2C5282".to_owned(),
+            code_background: "F7FAFC".to_owned(),
+            quote_background: "EDF2F7".to_owned(),
         },
         BuiltInTheme::Engineering => ThemeProfile {
             name: "engineering".to_owned(),
@@ -399,6 +435,15 @@ fn resolve_theme(theme: &ThemeConfig) -> ThemeProfile {
             code_font_size_pt: 9.0,
             heading_scale: 1.5,
             margin_mm: 16.0,
+            body_font: "DejaVu Sans".to_owned(),
+            heading_font: "DejaVu Sans".to_owned(),
+            code_font: "DejaVu Sans Mono".to_owned(),
+            body_color: "1F2933".to_owned(),
+            muted_color: "616E7C".to_owned(),
+            heading_color: "0B1F33".to_owned(),
+            accent_color: "0F766E".to_owned(),
+            code_background: "F0FDFA".to_owned(),
+            quote_background: "E6FFFA".to_owned(),
         },
         BuiltInTheme::Informational => ThemeProfile {
             name: "informational".to_owned(),
@@ -406,6 +451,15 @@ fn resolve_theme(theme: &ThemeConfig) -> ThemeProfile {
             code_font_size_pt: 9.5,
             heading_scale: 1.3,
             margin_mm: 20.0,
+            body_font: "DejaVu Sans".to_owned(),
+            heading_font: "DejaVu Sans".to_owned(),
+            code_font: "DejaVu Sans Mono".to_owned(),
+            body_color: "243B53".to_owned(),
+            muted_color: "627D98".to_owned(),
+            heading_color: "1D3557".to_owned(),
+            accent_color: "457B9D".to_owned(),
+            code_background: "F1F5F9".to_owned(),
+            quote_background: "E2E8F0".to_owned(),
         },
     };
     if let Some(custom) = theme.custom_theme_json.as_ref() {
@@ -429,5 +483,23 @@ fn apply_json_overrides(profile: &mut ThemeProfile, json: &Value) {
     }
     if let Some(margin) = json.get("margin_mm").and_then(Value::as_f64) {
         profile.margin_mm = margin as f32;
+    }
+    if let Some(color) = json.get("body_color").and_then(Value::as_str) {
+        profile.body_color = color.to_owned();
+    }
+    if let Some(color) = json.get("muted_color").and_then(Value::as_str) {
+        profile.muted_color = color.to_owned();
+    }
+    if let Some(color) = json.get("heading_color").and_then(Value::as_str) {
+        profile.heading_color = color.to_owned();
+    }
+    if let Some(color) = json.get("accent_color").and_then(Value::as_str) {
+        profile.accent_color = color.to_owned();
+    }
+    if let Some(color) = json.get("code_background").and_then(Value::as_str) {
+        profile.code_background = color.to_owned();
+    }
+    if let Some(color) = json.get("quote_background").and_then(Value::as_str) {
+        profile.quote_background = color.to_owned();
     }
 }
