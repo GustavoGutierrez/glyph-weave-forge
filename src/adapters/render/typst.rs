@@ -4,7 +4,7 @@ use typst_as_lib::typst_kit_options::TypstKitFontOptions;
 
 use crate::adapters::render::plan::{ThemeProfile, page_spec, resolve_theme};
 use crate::core::ports::{RenderBackend, RenderRequest, ResolvedAsset, ResourceStatus};
-use crate::core::{Block, Document, ForgeError, Inline, Result, TableAlignment};
+use crate::core::{Block, Document, ForgeError, Inline, LayoutMode, Result, TableAlignment};
 
 #[derive(Debug, Default)]
 pub struct TypstPdfRenderer;
@@ -19,6 +19,7 @@ impl RenderBackend for TypstPdfRenderer {
             page_size.width_mm,
             page_size.height_mm,
             &theme,
+            request.layout_mode,
             &mut assets,
         )?;
 
@@ -91,11 +92,16 @@ fn build_typst_source(
     page_width_mm: f32,
     page_height_mm: f32,
     theme: &ThemeProfile,
+    layout_mode: LayoutMode,
     assets: &mut TypstAssetLibrary,
 ) -> Result<String> {
     let mut source = String::new();
+    let height_directive = match layout_mode {
+        LayoutMode::SinglePage => "auto".to_owned(),
+        LayoutMode::Paged => format!("{page_height_mm:.1}mm"),
+    };
     source.push_str(&format!(
-        "#set page(width: {page_width_mm:.1}mm, height: {page_height_mm:.1}mm, margin: {margin:.1}mm)\n",
+        "#set page(width: {page_width_mm:.1}mm, height: {height_directive}, margin: {margin:.1}mm)\n",
         margin = theme.margin_mm
     ));
     source.push_str(&format!(
