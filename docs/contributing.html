@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contribute to GlyphWeaveForge — help improve the Rust Markdown-to-PDF library. Open source, MIT licensed.">
+    <title>Contribute — GlyphWeaveForge</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <div class="inner">
+            <div class="logo">Glyph<span>Weave</span>Forge</div>
+            <ul class="links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="getting-started.html">Getting Started</a></li>
+                <li><a href="api.html">API</a></li>
+                <li><a href="contributing.html" class="active">Contribute</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top:5rem;">
+        <h1 class="section-title" style="margin-top:2rem;">Contribute</h1>
+        <p class="section-subtitle">GlyphWeaveForge is open source under the MIT license. Help us make it better.</p>
+
+        <section style="padding-top:2rem;">
+
+            <div class="api-item">
+                <h3>How to contribute</h3>
+                <ol class="step-list">
+                    <li>
+                        <h4>Fork &amp; Clone</h4>
+                        <p>Fork the <a class="inline" href="https://github.com/GustavoGutierrez/glyph-weave-forge" target="_blank">glyph-weave-forge</a> repository and clone it locally.</p>
+                    </li>
+                    <li>
+                        <h4>Find an Issue</h4>
+                        <p>Browse <a class="inline" href="https://github.com/GustavoGutierrez/glyph-weave-forge/issues" target="_blank">open issues</a> or create one to discuss your idea before coding.</p>
+                    </li>
+                    <li>
+                        <h4>Create a Branch</h4>
+                        <p>Use a descriptive branch name: <code>feat/mermaid-gantt</code>, <code>fix/table-alignment</code>, <code>docs/api-examples</code>.</p>
+                    </li>
+                    <li>
+                        <h4>Follow the Architecture</h4>
+                        <p>Respect the internal boundary: <code>api &rarr; pipeline &rarr; core &rarr; adapters</code>. Read <a class="inline" href="https://github.com/GustavoGutierrez/glyph-weave-forge/blob/main/AGENTS.md" target="_blank">AGENTS.md</a> for project conventions.</p>
+                    </li>
+                    <li>
+                        <h4>Write Tests</h4>
+                        <p>All changes should include tests. Run <code>cargo test --all-features</code> before committing.</p>
+                    </li>
+                    <li>
+                        <h4>Submit a PR</h4>
+                        <p>Open a pull request against <code>main</code>. The CI will run <code>cargo fmt</code>, <code>clippy</code>, and all tests.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="api-item">
+                <h3>Areas to improve</h3>
+                <p class="desc">Here are some high-impact areas where contributions are especially welcome:</p>
+                <div class="grid" style="margin-top:1.5rem;">
+                    <div class="card">
+                        <h3><span class="icon">&#128218;</span> More Themes</h3>
+                        <p>Design and contribute new built-in themes — legal briefs, resumes, brochures, slide decks. Themes are JSON-configurable.</p>
+                    </div>
+                    <div class="card">
+                        <h3><span class="icon">&#128295;</span> Mermaid Expansion</h3>
+                        <p>Extend the Rust-native Mermaid subset renderer — sequence diagrams, state machines, pie charts, and Gantt charts are partially implemented.</p>
+                    </div>
+                    <div class="card">
+                        <h3><span class="icon">&#8721;</span> Math Engine</h3>
+                        <p>Expand the TeX-subset converter to support more LaTeX math environments and symbols. The parser already handles a practical subset.</p>
+                    </div>
+                    <div class="card">
+                        <h3><span class="icon">&#127760;</span> WASM Target</h3>
+                        <p>Help make the minimal backend compile to WebAssembly so GlyphWeaveForge can run in browsers and edge functions.</p>
+                    </div>
+                    <div class="card">
+                        <h3><span class="icon">&#128196;</span> Table of Contents</h3>
+                        <p>Auto-generate a TOC from headings. Link it to page numbers in the PDF output.</p>
+                    </div>
+                    <div class="card">
+                        <h3><span class="icon">&#127912;</span> Syntax Highlighting</h3>
+                        <p>Render code blocks with actual syntax highlighting in the Typst backend instead of monochrome text.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="api-item">
+                <h3>Pre-commit checklist</h3>
+                <p class="desc">Before submitting a PR, make sure these pass:</p>
+<pre><code>cargo fmt --check
+cargo check
+cargo test --all-features
+cargo test --doc
+cargo clippy --all-targets --all-features -- -D warnings</code></pre>
+                <p class="desc" style="margin-top:1rem;">The project also runs a <strong>security scan</strong> before every release. You can run it manually:</p>
+<pre><code># Trigger the gwf-validate skill (if using OpenCode)
+/gwf-validate</code></pre>
+            </div>
+
+            <div class="api-item">
+                <h3>Code of Conduct</h3>
+                <p class="desc">Be respectful. Be constructive. This is a community project — contributions of all kinds are welcome: code, docs, bug reports, feature suggestions, and design feedback.</p>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>
+                <a href="https://crates.io/crates/glyphweaveforge" target="_blank">crates.io</a> &middot;
+                <a href="https://github.com/GustavoGutierrez/glyph-weave-forge" target="_blank">GitHub</a> &middot;
+                <a href="https://docs.rs/glyphweaveforge" target="_blank">docs.rs</a>
+            </p>
+            <p style="margin-top:0.5rem;">GlyphWeaveForge — MIT License — Gustavo Gutiérrez</p>
+        </div>
+    </footer>
+</body>
+</html>

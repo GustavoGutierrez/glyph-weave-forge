@@ -1,5 +1,11 @@
 ![GlyphWeaveForge](https://raw.githubusercontent.com/GustavoGutierrez/glyph-weave-forge/main/glyphweaveforge.webp)
 
+[![Crates.io](https://img.shields.io/crates/v/glyphweaveforge?style=flat-square&color=E0690D)](https://crates.io/crates/glyphweaveforge)
+[![docs.rs](https://img.shields.io/docsrs/glyphweaveforge?style=flat-square&color=E0690D)](https://docs.rs/glyphweaveforge)
+[![License: MIT](https://img.shields.io/badge/license-MIT-E0690D?style=flat-square)](LICENSE)
+[![Made with Rust](https://img.shields.io/badge/Made%20with-Rust-CE422B?style=flat-square&logo=rust)](https://www.rust-lang.org)
+[![Documentation](https://img.shields.io/badge/docs-github%20pages-E0690D?style=flat-square)](https://gustavogutierrez.github.io/glyph-weave-forge/)
+
 # GlyphWeaveForge
 
 GlyphWeaveForge converts Markdown into PDF through a small Rust pipeline with explicit boundaries:
@@ -24,7 +30,7 @@ The crate ships a lightweight built-in renderer by default and can optionally us
 
 ```toml
 [dependencies]
-glyphweaveforge = "0.1.5"
+glyphweaveforge = "0.1.6"
 ```
 
 Enable optional features when you need them:
@@ -315,3 +321,22 @@ The rendering request/asset helper types exposed for adapters are:
 Release work should preserve the internal boundary:
 
 `api -> pipeline -> core -> adapters`
+
+## Documentation
+
+Full documentation is available at **[gustavogutierrez.github.io/glyph-weave-forge](https://gustavogutierrez.github.io/glyph-weave-forge/)**:
+
+- [Getting Started](https://gustavogutierrez.github.io/glyph-weave-forge/getting-started) — installation, quick start, feature flags
+- [API Reference](https://gustavogutierrez.github.io/glyph-weave-forge/api) — complete builder API, types, and error handling
+- [Contributing](https://gustavogutierrez.github.io/glyph-weave-forge/contributing) — how to contribute, areas to improve, pre-commit checklist
+
+## Author
+
+Created by **Gustavo Gutiérrez** — Bogotá, Colombia.
+
+- GitHub: [@GustavoGutierrez](https://github.com/GustavoGutierrez)
+- crates.io: [glyphweaveforge](https://crates.io/crates/glyphweaveforge)
+
+## License
+
+MIT — see [LICENSE](LICENSE) for details.

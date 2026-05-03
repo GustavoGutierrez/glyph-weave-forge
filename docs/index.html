@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GlyphWeaveForge — Convert Markdown into PDF through an explicit Rust pipeline with minimal and Typst backends. Open source Rust library.">
+    <meta name="author" content="Gustavo Gutiérrez">
+    <title>GlyphWeaveForge — Markdown to PDF in Rust</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <div class="inner">
+            <div class="logo">Glyph<span>Weave</span>Forge</div>
+            <ul class="links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="getting-started.html">Getting Started</a></li>
+                <li><a href="api.html">API</a></li>
+                <li><a href="contributing.html">Contribute</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <img src="logo.webp" alt="GlyphWeaveForge" class="logo-hero">
+        <h1>Glyph<span>Weave</span>Forge</h1>
+        <p class="tagline">
+            Convert Markdown into PDF through an explicit Rust pipeline.
+            Minimal and Typst backends, configurable themes, math &amp; mermaid support.
+        </p>
+        <div class="cta">
+            <a href="getting-started.html" class="btn btn-primary">Get Started</a>
+            <a href="https://github.com/GustavoGutierrez/glyph-weave-forge" class="btn btn-ghost" target="_blank">GitHub</a>
+        </div>
+        <div class="badges">
+            <a href="https://crates.io/crates/glyphweaveforge" target="_blank">
+                <img src="https://img.shields.io/crates/v/glyphweaveforge?style=flat-square&color=E0690D" alt="Crates.io">
+            </a>
+            <a href="https://docs.rs/glyphweaveforge" target="_blank">
+                <img src="https://img.shields.io/docsrs/glyphweaveforge?style=flat-square&color=E0690D" alt="docs.rs">
+            </a>
+            <a href="https://github.com/GustavoGutierrez/glyph-weave-forge/blob/main/LICENSE" target="_blank">
+                <img src="https://img.shields.io/badge/license-MIT-E0690D?style=flat-square" alt="MIT License">
+            </a>
+            <a href="https://github.com/GustavoGutierrez/glyph-weave-forge" target="_blank">
+                <img src="https://img.shields.io/badge/Made%20with-Rust-CE422B?style=flat-square&logo=rust" alt="Rust">
+            </a>
+        </div>
+    </section>
+
+    <div class="container">
+        <section>
+            <h2 class="section-title">Why GlyphWeaveForge?</h2>
+            <p class="section-subtitle">A <strong>Rust</strong> library that gives you full control over Markdown-to-PDF conversion — from parsing to rendering.</p>
+            <div class="grid">
+                <div class="card">
+                    <h3><span class="icon">&#9881;</span> Dual Backends</h3>
+                    <p>Choose between a lightweight <strong>Minimal</strong> renderer (zero system dependencies) or the powerful <strong>Typst</strong> backend for professional typesetting with fonts, layouts, and math.</p>
+                </div>
+                <div class="card">
+                    <h3><span class="icon">&#9733;</span> Configurable Themes</h3>
+                    <p>Built-in themes (<code>Professional</code>, <code>Engineering</code>, <code>Scientific Article</code>, <code>Invoice</code>, <code>Informational</code>) plus full JSON overrides for fonts, colors, and sizes.</p>
+                </div>
+                <div class="card">
+                    <h3><span class="icon">&#8721;</span> Math &amp; Mermaid</h3>
+                    <p>GFM math (<code>$...$</code>, <code>$$...$$</code>) with TeX-subset conversion for real Typst rendering. Rust-native Mermaid diagram subset — no Node, no npm.</p>
+                </div>
+                <div class="card">
+                    <h3><span class="icon">&#128295;</span> Fluent Builder API</h3>
+                    <p>Chain <code>.from_text()</code> &rarr; <code>.to_file()</code> &rarr; <code>.with_theme()</code> &rarr; <code>.convert()</code>. Everything is type-safe and composable.</p>
+                </div>
+                <div class="card">
+                    <h3><span class="icon">&#128274;</span> Safe by Default</h3>
+                    <p>No panicking <code>.expect()</code> in production. Paths sanitized. Secrets scanned before every release. Built with a layered architecture (<code>api &rarr; pipeline &rarr; core &rarr; adapters</code>).</p>
+                </div>
+                <div class="card">
+                    <h3><span class="icon">&#127279;</span> Open Source — MIT</h3>
+                    <p>Free for personal and commercial use. Contributions welcome! Fork, improve, and submit a PR on <a href="https://github.com/GustavoGutierrez/glyph-weave-forge" target="_blank">GitHub</a>.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-title">Quick Example</h2>
+            <p class="section-subtitle">Convert Markdown to PDF in 4 lines of Rust.</p>
+<pre><code><span class="hl-cmt">// Cargo.toml</span>
+<span class="hl-cmt">// glyphweaveforge = "0.1"</span>
+
+<span class="hl-kw">use</span> glyphweaveforge::Forge;
+
+<span class="hl-kw">fn</span> <span class="hl-fn">main</span>() {
+    <span class="hl-kw">let</span> pdf = Forge::<span class="hl-fn">new</span>()
+        .<span class="hl-fn">from_text</span>(<span class="hl-str">"# Hello World\n\nThis is **Markdown**."</span>)
+        .<span class="hl-fn">to_memory</span>()
+        .<span class="hl-fn">convert</span>()
+        .<span class="hl-fn">expect</span>(<span class="hl-str">"conversion should succeed"</span>);
+
+    <span class="hl-fn">assert!</span>(pdf.bytes.<span class="hl-fn">expect</span>(<span class="hl-str">"bytes present"</span>).<span class="hl-fn">starts_with</span>(<span class="hl-str">b"%PDF"</span>));
+}</code></pre>
+            <a href="getting-started.html" class="btn btn-primary" style="margin-top: 1rem;">Full Getting Started Guide &rarr;</a>
+        </section>
+
+        <section>
+            <h2 class="section-title">Features</h2>
+            <table class="feat-table">
+                <thead><tr><th>Feature</th><th>Minimal</th><th>Typst</th></tr></thead>
+                <tbody>
+                    <tr><td>Headings, paragraphs, lists</td><td class="feat-check">&#10003;</td><td class="feat-check">&#10003;</td></tr>
+                    <tr><td>Bold, italic, code, links</td><td class="feat-check">&#10003;</td><td class="feat-check">&#10003;</td></tr>
+                    <tr><td>Tables</td><td class="feat-check">&#10003;</td><td class="feat-check">&#10003;</td></tr>
+                    <tr><td>Code blocks with language</td><td class="feat-check">&#10003;</td><td class="feat-check">&#10003;</td></tr>
+                    <tr><td>Images (inline &amp; HTML)</td><td class="feat-check">&#10003;</td><td class="feat-check">&#10003;</td></tr>
+                    <tr><td>Page themes (5 built-in)</td><td class="feat-check">&#10003;</td><td class="feat-check">&#10003;</td></tr>
+                    <tr><td>Resource resolver (custom)</td><td class="feat-check">&#10003;</td><td class="feat-check">&#10003;</td></tr>
+                    <tr><td>Math (<code>$...$</code>, <code>$$...$$</code>)</td><td class="feat-muted">text fallback</td><td class="feat-check">&#10003; real</td></tr>
+                    <tr><td>Mermaid diagrams</td><td class="feat-muted">fallback notice</td><td class="feat-check">&#10003; SVG</td></tr>
+                    <tr><td>Custom fonts</td><td>&mdash;</td><td class="feat-check">&#10003;</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>
+                Made with <span style="color:var(--rust);">&hearts;</span> in Rust by
+                <a href="https://github.com/GustavoGutierrez" target="_blank">Gustavo Gutiérrez</a>
+                &mdash; Bogotá, Colombia
+            </p>
+            <p style="margin-top:0.5rem;">
+                <a href="https://crates.io/crates/glyphweaveforge" target="_blank">crates.io</a> &middot;
+                <a href="https://github.com/GustavoGutierrez/glyph-weave-forge" target="_blank">GitHub</a> &middot;
+                <a href="https://docs.rs/glyphweaveforge" target="_blank">docs.rs</a>
+            </p>
+            <p style="margin-top:1rem; font-size:0.8rem;">
+                Open source under the <a href="https://github.com/GustavoGutierrez/glyph-weave-forge/blob/main/LICENSE" target="_blank">MIT License</a>.
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

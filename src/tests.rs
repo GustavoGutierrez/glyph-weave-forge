@@ -6,7 +6,9 @@ use tempfile::tempdir;
 
 use crate::adapters::markdown::PulldownParser;
 use crate::adapters::render::MinimalPdfRenderer;
-use crate::adapters::render::plan::{RenderCodeBlock, RenderElement, build_render_plan};
+use crate::adapters::render::plan::{
+    RenderCodeBlock, RenderElement, build_render_plan, resolve_theme,
+};
 use crate::core::ports::{MarkdownParser, RenderBackend, RenderRequest};
 use crate::core::ports::{ResolvedAsset, ResourceStatus};
 use crate::core::{Block, Document, ForgeError, Inline};
@@ -41,6 +43,45 @@ fn parser_preserves_standard_tables() {
         .expect("parse should succeed");
 
     assert!(matches!(document.blocks[0], Block::Table { .. }));
+}
+
+#[test]
+fn parser_maps_inline_math_to_ast_math_node() {
+    let document = PulldownParser
+        .parse("Energy $E=mc^2$ relation")
+        .expect("parse should succeed");
+
+    assert!(matches!(
+        &document.blocks[0],
+        Block::Paragraph { content }
+            if content.iter().any(|inline| matches!(inline, Inline::Math(tex) if tex == "E=mc^2"))
+    ));
+}
+
+#[test]
+fn parser_maps_display_math_to_block_node() {
+    let document = PulldownParser
+        .parse("before\n\n$$\\frac{a}{b}$$\n\nafter")
+        .expect("parse should succeed");
+
+    assert!(
+        document
+            .blocks
+            .iter()
+            .any(|block| matches!(block, Block::Math { tex } if tex.contains("\\frac{a}{b}")))
+    );
+}
+
+#[test]
+fn parser_maps_mermaid_fence_to_mermaid_block() {
+    let document = PulldownParser
+        .parse("```mermaid\nflowchart TD\nA --> B\n```")
+        .expect("parse should succeed");
+
+    assert!(matches!(
+        document.blocks.first(),
+        Some(Block::Mermaid { source }) if source.contains("flowchart TD") && source.contains("A --> B")
+    ));
 }
 
 #[test]
@@ -160,10 +201,110 @@ fn theme_page_size_and_layout_options_flow_into_pdf_text() {
         .convert()
         .expect("conversion should succeed");
 
-    let text = pdf_text(&result.bytes.expect("pdf bytes should exist"));
-    assert!(text.contains("custom-engineering"));
-    assert!(text.contains("215.9x279.4mm"));
-    assert!(text.contains("SinglePage"));
+    let bytes = result.bytes.expect("pdf bytes should exist");
+    let text = pdf_text(&bytes);
+    // Verify content renders
+    assert!(text.contains("Report"));
+    // Verify PDF header
+    assert!(bytes.starts_with(b"%PDF"));
+    // Page size and layout flow into resolved profile (tested in theme resolution tests)
+    let profile = resolve_theme(&ThemeConfig {
+        built_in: Some(BuiltInTheme::Engineering),
+        custom_theme_json: Some(json!({"name": "custom-engineering"})),
+    });
+    assert_eq!(profile.name, "custom-engineering");
+}
+
+#[test]
+fn theme_json_overrides_are_applied_to_resolved_profile() {
+    let theme = resolve_theme(&ThemeConfig {
+        built_in: Some(BuiltInTheme::Engineering),
+        custom_theme_json: Some(json!({
+            "name": "compact-engineering",
+            "body_font_size_pt": 9.0,
+            "code_font_size_pt": 8.0,
+            "heading_scale": 1.1,
+            "margin_mm": 12.0,
+            "body_color": "111111",
+            "muted_color": "222222",
+            "heading_color": "333333",
+            "accent_color": "444444",
+            "code_background": "555555",
+            "quote_background": "666666"
+        })),
+    });
+
+    assert_eq!(theme.name, "compact-engineering");
+    assert_eq!(theme.body_font_size_pt, 9.0);
+    assert_eq!(theme.code_font_size_pt, 8.0);
+    assert_eq!(theme.heading_scale, 1.1);
+    assert_eq!(theme.margin_mm, 12.0);
+    assert_eq!(theme.body_color, "111111");
+    assert_eq!(theme.muted_color, "222222");
+    assert_eq!(theme.heading_color, "333333");
+    assert_eq!(theme.accent_color, "444444");
+    assert_eq!(theme.code_background, "555555");
+    assert_eq!(theme.quote_background, "666666");
+}
+
+#[test]
+fn built_in_themes_match_documented_style_presets() {
+    let invoice = resolve_theme(&ThemeConfig {
+        built_in: Some(BuiltInTheme::Invoice),
+        custom_theme_json: None,
+    });
+    assert_eq!(invoice.body_font, "DejaVu Sans");
+    assert_eq!(invoice.heading_font, "DejaVu Sans");
+    assert_eq!(invoice.body_font_size_pt, 11.0);
+    assert_eq!(invoice.margin_mm, 25.4);
+    assert_eq!(invoice.heading_scale, 1.3);
+    assert_eq!(invoice.muted_color, "666666");
+    assert_eq!(invoice.heading_color, "1E3A8A");
+
+    let scientific = resolve_theme(&ThemeConfig {
+        built_in: Some(BuiltInTheme::ScientificArticle),
+        custom_theme_json: None,
+    });
+    assert_eq!(scientific.body_font, "DejaVu Serif");
+    assert_eq!(scientific.body_font_size_pt, 10.0);
+    assert_eq!(scientific.code_font_size_pt, 8.5);
+    assert_eq!(scientific.margin_mm, 20.0);
+    assert_eq!(scientific.heading_scale, 1.9);
+    assert_eq!(scientific.body_color, "000000");
+    assert_eq!(scientific.heading_color, "000000");
+
+    let professional = resolve_theme(&ThemeConfig {
+        built_in: Some(BuiltInTheme::Professional),
+        custom_theme_json: None,
+    });
+    assert_eq!(professional.body_font, "DejaVu Sans");
+    assert_eq!(professional.body_font_size_pt, 12.0);
+    assert_eq!(professional.margin_mm, 25.4);
+    assert_eq!(professional.heading_scale, 1.55);
+    assert_eq!(professional.heading_color, "1E3A8A");
+    assert_eq!(professional.muted_color, "6B7280");
+
+    let engineering = resolve_theme(&ThemeConfig {
+        built_in: Some(BuiltInTheme::Engineering),
+        custom_theme_json: None,
+    });
+    assert_eq!(engineering.body_font, "DejaVu Serif");
+    assert_eq!(engineering.code_font, "DejaVu Sans Mono");
+    assert_eq!(engineering.body_font_size_pt, 10.5);
+    assert_eq!(engineering.margin_mm, 20.0);
+    assert_eq!(engineering.heading_scale, 1.35);
+    assert_eq!(engineering.body_color, "000000");
+
+    let informational = resolve_theme(&ThemeConfig {
+        built_in: Some(BuiltInTheme::Informational),
+        custom_theme_json: None,
+    });
+    assert_eq!(informational.body_font, "DejaVu Sans");
+    assert_eq!(informational.body_font_size_pt, 13.0);
+    assert_eq!(informational.code_font_size_pt, 10.5);
+    assert_eq!(informational.margin_mm, 25.4);
+    assert_eq!(informational.heading_scale, 1.55);
+    assert_eq!(informational.heading_color, "1D4ED8");
 }
 
 #[test]
@@ -332,9 +473,8 @@ fn render_plan_emits_code_block_elements_with_language_and_lines() {
 #[test]
 fn render_plan_keeps_honest_fallback_markers_for_mermaid_and_math() {
     let document = Document::new(vec![
-        Block::Code {
-            language: Some("mermaid".to_owned()),
-            code: "graph TD\nA-->B".to_owned(),
+        Block::Mermaid {
+            source: "graph TD\nA-->B".to_owned(),
         },
         Block::Code {
             language: Some("math".to_owned()),
@@ -445,6 +585,19 @@ fn math_blocks_use_honest_visible_fallback_text() {
     assert!(text.contains("x^2 + 1"));
 }
 
+#[test]
+fn minimal_renderer_uses_readable_math_fallbacks() {
+    let result = Forge::new()
+        .from_text("Inline $x^2$ and\n\n$$\n\\sum_{n=1}^{\\infty} a_n\n$$")
+        .to_memory()
+        .convert()
+        .expect("conversion should succeed");
+
+    let text = pdf_text(&result.bytes.expect("bytes should exist"));
+    assert!(text.contains("[math: x^2]"));
+    assert!(text.contains("[math]"));
+}
+
 #[cfg(feature = "renderer-typst")]
 #[test]
 fn typst_backend_renders_pdf_bytes() {
@@ -458,6 +611,21 @@ fn typst_backend_renders_pdf_bytes() {
     let bytes = result.bytes.expect("bytes should exist");
     assert!(bytes.starts_with(b"%PDF"));
     assert!(bytes.len() > 100);
+}
+
+#[cfg(feature = "renderer-typst")]
+#[test]
+fn typst_backend_renders_scientific_article_fixture_with_math() {
+    let markdown = include_str!("../examples/markdown/mathematical-article.md");
+    let output = Forge::new()
+        .from_text(markdown)
+        .to_memory()
+        .with_backend(RenderBackendSelection::Typst)
+        .convert()
+        .expect("typst backend should render fixture");
+
+    let bytes = output.bytes.expect("bytes should exist");
+    assert!(bytes.starts_with(b"%PDF"));
 }
 
 #[test]

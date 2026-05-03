@@ -266,13 +266,11 @@ fn render_mermaid_block(
                     escape_typst_string(&path)
                 ))
             }
-            MermaidRenderOutcome::Fallback(message) => {
-                Ok(render_notice_block(
-                    "Unsupported mermaid",
-                    &format!("[unsupported:mermaid] {message}\\n{source}"),
-                    theme,
-                ))
-            }
+            MermaidRenderOutcome::Fallback(message) => Ok(render_notice_block(
+                "Unsupported mermaid",
+                &format!("[unsupported:mermaid] {message}\\n{source}"),
+                theme,
+            )),
         }
     }
 

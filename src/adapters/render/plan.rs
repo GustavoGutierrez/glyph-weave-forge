@@ -79,23 +79,7 @@ pub(crate) fn build_render_plan(
 
     let theme = resolve_theme(&request.theme);
     let page_size = page_spec(request.page_size);
-    let mut elements = vec![
-        RenderElement::Line(RenderLine {
-            text: format!("[theme:{}]", theme.name),
-            font_size_pt: 8.0,
-        }),
-        RenderElement::Line(RenderLine {
-            text: format!(
-                "[page:{:.1}x{:.1}mm layout:{:?}]",
-                page_size.width_mm, page_size.height_mm, request.layout_mode
-            ),
-            font_size_pt: 8.0,
-        }),
-        RenderElement::Line(RenderLine {
-            text: String::new(),
-            font_size_pt: theme.body_font_size_pt,
-        }),
-    ];
+    let mut elements = Vec::new();
     elements.extend(document_to_elements(document, &theme));
 
     Ok(RenderPlan {
@@ -246,6 +230,21 @@ fn document_to_elements(document: &Document, theme: &ThemeProfile) -> Vec<Render
             Block::Code { language, code } => {
                 render_code_block(&mut elements, language.as_deref(), code, theme)
             }
+            Block::Mermaid { source } => {
+                elements.push(RenderElement::CodeBlock(RenderCodeBlock {
+                    language: Some("mermaid".to_owned()),
+                    summary: "[unsupported:mermaid]".to_owned(),
+                    lines: source.lines().map(ToOwned::to_owned).collect(),
+                    font_size_pt: theme.code_font_size_pt,
+                }));
+            }
+            Block::Math { tex } => {
+                elements.push(RenderElement::Line(RenderLine {
+                    text: format!("[math] {tex}"),
+                    font_size_pt: theme.body_font_size_pt,
+                }));
+                elements.push(RenderElement::Line(blank_line(theme.body_font_size_pt)));
+            }
             Block::Image { alt, asset } => {
                 if let Some(image) = render_image(alt, asset) {
                     elements.push(RenderElement::Image(image));
@@ -295,10 +294,6 @@ fn render_code_block(
     theme: &ThemeProfile,
 ) {
     let (language, summary) = match language {
-        Some("mermaid") => (
-            Some("mermaid".to_owned()),
-            "[unsupported:mermaid]".to_owned(),
-        ),
         Some("math") => (Some("math".to_owned()), "[unsupported:math]".to_owned()),
         Some(language) => (Some(language.to_owned()), format!("[code:{language}]")),
         None => (None, "[code:text]".to_owned()),
@@ -375,6 +370,11 @@ fn inline_text(content: &[Inline]) -> String {
                 out.push_str(text);
                 out.push('`');
             }
+            Inline::Math(text) => {
+                out.push_str("[math: ");
+                out.push_str(text);
+                out.push(']');
+            }
             Inline::Emphasis(children) => {
                 out.push('*');
                 out.push_str(&inline_text(children));
@@ -426,81 +426,81 @@ pub(crate) fn resolve_theme(theme: &ThemeConfig) -> ThemeProfile {
             name: "invoice".to_owned(),
             body_font_size_pt: 11.0,
             code_font_size_pt: 9.5,
-            heading_scale: 1.35,
-            margin_mm: 18.0,
-            body_font: "DejaVu Serif".to_owned(),
+            heading_scale: 1.3,
+            margin_mm: 25.4,
+            body_font: "DejaVu Sans".to_owned(),
             heading_font: "DejaVu Sans".to_owned(),
             code_font: "DejaVu Sans Mono".to_owned(),
-            body_color: "3B2F2F".to_owned(),
-            muted_color: "7A5C4F".to_owned(),
-            heading_color: "7C2D12".to_owned(),
-            accent_color: "B45309".to_owned(),
-            code_background: "FFF7ED".to_owned(),
-            quote_background: "FFEDD5".to_owned(),
+            body_color: "000000".to_owned(),
+            muted_color: "666666".to_owned(),
+            heading_color: "1E3A8A".to_owned(),
+            accent_color: "1E3A8A".to_owned(),
+            code_background: "F8FAFC".to_owned(),
+            quote_background: "F1F5F9".to_owned(),
         },
         BuiltInTheme::ScientificArticle => ThemeProfile {
             name: "scientific-article".to_owned(),
-            body_font_size_pt: 10.5,
-            code_font_size_pt: 9.0,
-            heading_scale: 1.4,
+            body_font_size_pt: 10.0,
+            code_font_size_pt: 8.5,
+            heading_scale: 1.9,
             margin_mm: 20.0,
             body_font: "DejaVu Serif".to_owned(),
             heading_font: "DejaVu Serif".to_owned(),
             code_font: "DejaVu Sans Mono".to_owned(),
-            body_color: "1F2933".to_owned(),
-            muted_color: "52606D".to_owned(),
-            heading_color: "102A43".to_owned(),
-            accent_color: "1F5F8B".to_owned(),
-            code_background: "F5F7FA".to_owned(),
-            quote_background: "EEF4F7".to_owned(),
+            body_color: "000000".to_owned(),
+            muted_color: "444444".to_owned(),
+            heading_color: "000000".to_owned(),
+            accent_color: "222222".to_owned(),
+            code_background: "F5F5F5".to_owned(),
+            quote_background: "FAFAFA".to_owned(),
         },
         BuiltInTheme::Professional => ThemeProfile {
             name: "professional".to_owned(),
-            body_font_size_pt: 11.5,
+            body_font_size_pt: 12.0,
             code_font_size_pt: 9.5,
-            heading_scale: 1.45,
-            margin_mm: 18.0,
-            body_font: "DejaVu Serif".to_owned(),
+            heading_scale: 1.55,
+            margin_mm: 25.4,
+            body_font: "DejaVu Sans".to_owned(),
             heading_font: "DejaVu Sans".to_owned(),
             code_font: "DejaVu Sans Mono".to_owned(),
-            body_color: "243B53".to_owned(),
-            muted_color: "486581".to_owned(),
-            heading_color: "102A43".to_owned(),
-            accent_color: "2C5282".to_owned(),
+            body_color: "111827".to_owned(),
+            muted_color: "6B7280".to_owned(),
+            heading_color: "1E3A8A".to_owned(),
+            accent_color: "2563EB".to_owned(),
             code_background: "F7FAFC".to_owned(),
             quote_background: "EDF2F7".to_owned(),
         },
         BuiltInTheme::Engineering => ThemeProfile {
             name: "engineering".to_owned(),
-            body_font_size_pt: 11.0,
+            body_font_size_pt: 10.5,
             code_font_size_pt: 9.0,
-            heading_scale: 1.5,
-            margin_mm: 16.0,
-            body_font: "DejaVu Sans".to_owned(),
-            heading_font: "DejaVu Sans".to_owned(),
+            heading_scale: 1.35,
+            margin_mm: 20.0,
+            body_font: "DejaVu Serif".to_owned(),
+            heading_font: "DejaVu Serif".to_owned(),
             code_font: "DejaVu Sans Mono".to_owned(),
-            body_color: "1F2933".to_owned(),
-            muted_color: "616E7C".to_owned(),
-            heading_color: "0B1F33".to_owned(),
-            accent_color: "0F766E".to_owned(),
-            code_background: "F0FDFA".to_owned(),
-            quote_background: "E6FFFA".to_owned(),
+            body_color: "000000".to_owned(),
+            muted_color: "4B5563".to_owned(),
+            heading_color: "111827".to_owned(),
+            accent_color: "374151".to_owned(),
+            code_background: "F3F4F6".to_owned(),
+            quote_background: "F9FAFB".to_owned(),
         },
         BuiltInTheme::Informational => ThemeProfile {
             name: "informational".to_owned(),
-            body_font_size_pt: 11.5,
-            code_font_size_pt: 9.5,
-            heading_scale: 1.3,
-            margin_mm: 20.0,
+            body_font_size_pt: 13.0,
+            code_font_size_pt: 10.5,
+            heading_scale: 1.55,
+            margin_mm: 25.4,
             body_font: "DejaVu Sans".to_owned(),
             heading_font: "DejaVu Sans".to_owned(),
             code_font: "DejaVu Sans Mono".to_owned(),
-            body_color: "243B53".to_owned(),
-            muted_color: "627D98".to_owned(),
-            heading_color: "1D3557".to_owned(),
-            accent_color: "457B9D".to_owned(),
-            code_background: "F1F5F9".to_owned(),
-            quote_background: "E2E8F0".to_owned(),
+            body_color: "1F2937".to_owned(),
+            muted_color: "64748B".to_owned(),
+            heading_color: "1D4ED8".to_owned(),
+            accent_color: "0EA5E9".to_owned(),
+            code_background: "EFF6FF".to_owned(),
+            quote_background: "F0F9FF".to_owned(),
         },
     };
     if let Some(custom) = theme.custom_theme_json.as_ref() {

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Get started with GlyphWeaveForge — install, configure, and convert Markdown to PDF in Rust with minimal setup.">
+    <title>Getting Started — GlyphWeaveForge</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <div class="inner">
+            <div class="logo">Glyph<span>Weave</span>Forge</div>
+            <ul class="links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="getting-started.html" class="active">Getting Started</a></li>
+                <li><a href="api.html">API</a></li>
+                <li><a href="contributing.html">Contribute</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top:5rem;">
+        <h1 class="section-title" style="margin-top:2rem;">Getting Started</h1>
+        <p class="section-subtitle">Install GlyphWeaveForge and convert your first Markdown file to PDF in minutes.</p>
+
+        <section style="padding-top:2rem;">
+            <div class="api-item">
+                <h3>1. Add the dependency</h3>
+                <p class="desc">Add to your <code>Cargo.toml</code>:</p>
+<pre><code>[dependencies]
+glyphweaveforge = "0.1"</code></pre>
+                <p class="desc">For Typst backend (recommended for production):</p>
+<pre><code>[dependencies]
+glyphweaveforge = { version = "0.1", features = ["renderer-typst"] }</code></pre>
+            </div>
+
+            <div class="api-item">
+                <h3>2. Basic conversion</h3>
+                <p class="desc">Create a <code>Forge</code> builder, feed it markdown text, and call <code>.convert()</code>:</p>
+<pre><code><span class="hl-kw">use</span> glyphweaveforge::Forge;
+
+<span class="hl-kw">fn</span> <span class="hl-fn">main</span>() {
+    <span class="hl-kw">let</span> pdf = Forge::<span class="hl-fn">new</span>()
+        .<span class="hl-fn">from_text</span>(<span class="hl-str">"# Hello\n\nThis is **bold** text."</span>)
+        .<span class="hl-fn">to_memory</span>()
+        .<span class="hl-fn">convert</span>()
+        .<span class="hl-fn">expect</span>(<span class="hl-str">"conversion succeeded"</span>);
+
+    <span class="hl-cmt">// pdf.bytes contains the raw PDF data</span>
+    <span class="hl-fn">assert!</span>(pdf.bytes.<span class="hl-fn">unwrap</span>().<span class="hl-fn">starts_with</span>(<span class="hl-str">b"%PDF"</span>));
+}</code></pre>
+            </div>
+
+            <div class="api-item">
+                <h3>3. From a file</h3>
+                <p class="desc">Read Markdown from disk and save the PDF to a file:</p>
+<pre><code><span class="hl-kw">use</span> glyphweaveforge::Forge;
+
+<span class="hl-kw">fn</span> <span class="hl-fn">main</span>() {
+    Forge::<span class="hl-fn">new</span>()
+        .<span class="hl-fn">from_path</span>(<span class="hl-str">"README.md"</span>)
+        .<span class="hl-fn">to_file</span>(<span class="hl-str">"output.pdf"</span>)
+        .<span class="hl-fn">convert</span>()
+        .<span class="hl-fn">expect</span>(<span class="hl-str">"conversion succeeded"</span>);
+}</code></pre>
+            </div>
+
+            <div class="api-item">
+                <h3>4. Choose a theme</h3>
+                <p class="desc">Six built-in themes. Pass them via <code>.with_theme()</code>:</p>
+<pre><code><span class="hl-kw">use</span> glyphweaveforge::{Forge, BuiltInTheme};
+
+<span class="hl-kw">fn</span> <span class="hl-fn">main</span>() {
+    Forge::<span class="hl-fn">new</span>()
+        .<span class="hl-fn">from_text</span>(<span class="hl-str">"# Engineering Report"</span>)
+        .<span class="hl-fn">to_file</span>(<span class="hl-str">"report.pdf"</span>)
+        .<span class="hl-fn">with_theme</span>(BuiltInTheme::Engineering)
+        .<span class="hl-fn">convert</span>()
+        .<span class="hl-fn">expect</span>(<span class="hl-str">"conversion succeeded"</span>);
+}</code></pre>
+                <p class="desc">Available themes: <code>Professional</code> (default), <code>Engineering</code>, <code>ScientificArticle</code>, <code>Invoice</code>, <code>Informational</code>.</p>
+            </div>
+
+            <div class="api-item">
+                <h3>5. Typst backend (advanced)</h3>
+                <p class="desc">Enable <code>renderer-typst</code> for professional typesetting with real math, custom fonts, and Mermaid diagrams:</p>
+<pre><code><span class="hl-kw">use</span> glyphweaveforge::{Forge, RenderBackendSelection, BuiltInTheme};
+
+<span class="hl-kw">fn</span> <span class="hl-fn">main</span>() {
+    Forge::<span class="hl-fn">new</span>()
+        .<span class="hl-fn">from_file</span>(<span class="hl-str">"paper.md"</span>)
+        .<span class="hl-fn">to_file</span>(<span class="hl-str">"paper.pdf"</span>)
+        .<span class="hl-fn">with_backend</span>(RenderBackendSelection::Typst)
+        .<span class="hl-fn">with_theme</span>(BuiltInTheme::ScientificArticle)
+        .<span class="hl-fn">convert</span>()
+        .<span class="hl-fn">expect</span>(<span class="hl-str">"conversion succeeded"</span>);
+}</code></pre>
+            </div>
+
+            <div class="api-item">
+                <h3>6. Resource resolver (images, logos)</h3>
+                <p class="desc">Resolve image paths dynamically — load from disk, a CDN, or generate on the fly:</p>
+<pre><code><span class="hl-kw">use</span> glyphweaveforge::Forge;
+
+<span class="hl-kw">fn</span> <span class="hl-fn">main</span>() {
+    <span class="hl-kw">let</span> pdf = Forge::<span class="hl-fn">new</span>()
+        .<span class="hl-fn">from_text</span>(<span class="hl-str">"![Logo](logo.png)"</span>)
+        .<span class="hl-fn">to_memory</span>()
+        .<span class="hl-fn">with_resource_resolver</span>(<span class="hl-kw">|</span>href: <span class="hl-ty">&str</span><span class="hl-kw">|</span> {
+            <span class="hl-kw">if</span> href == <span class="hl-str">"logo.png"</span> {
+                <span class="hl-fn">Ok</span>(<span class="hl-fn">vec!</span>[<span class="hl-num">1</span>, <span class="hl-num">2</span>, <span class="hl-num">3</span>])  <span class="hl-cmt">// real bytes here</span>
+            } <span class="hl-kw">else</span> {
+                <span class="hl-fn">Err</span>(<span class="hl-str">"not found"</span>.<span class="hl-fn">into</span>())
+            }
+        })
+        .<span class="hl-fn">convert</span>()
+        .<span class="hl-fn">expect</span>(<span class="hl-str">"conversion succeeded"</span>);
+}</code></pre>
+            </div>
+
+            <div class="api-item">
+                <h3>7. Feature flags</h3>
+                <table class="feat-table">
+                    <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>default = ["fs", "renderer-minimal"]</code></td><td>File I/O + minimal backend</td></tr>
+                        <tr><td><code>fs</code></td><td>Enables <code>from_path()</code>, <code>to_file()</code>, <code>to_dir()</code></td></tr>
+                        <tr><td><code>renderer-minimal</code></td><td>Lightweight native renderer (no system deps)</td></tr>
+                        <tr><td><code>renderer-typst</code></td><td>Typst backend (real math, fonts, Mermaid)</td></tr>
+                        <tr><td><code>typst</code></td><td>Alias for <code>renderer-typst</code></td></tr>
+                        <tr><td><code>math</code></td><td>GFM math parsing + TeX-to-Typst conversion</td></tr>
+                        <tr><td><code>mermaid</code></td><td>Rust-native Mermaid diagram renderer</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>
+                <a href="https://crates.io/crates/glyphweaveforge" target="_blank">crates.io</a> &middot;
+                <a href="https://github.com/GustavoGutierrez/glyph-weave-forge" target="_blank">GitHub</a> &middot;
+                <a href="https://docs.rs/glyphweaveforge" target="_blank">docs.rs</a>
+            </p>
+            <p style="margin-top:0.5rem;">GlyphWeaveForge — MIT License — Gustavo Gutiérrez</p>
+        </div>
+    </footer>
+</body>
+</html>

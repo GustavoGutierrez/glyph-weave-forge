@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GlyphWeaveForge API reference — Forge builder, ConvertOptions, themes, backends, and output targets.">
+    <title>API Reference — GlyphWeaveForge</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <div class="inner">
+            <div class="logo">Glyph<span>Weave</span>Forge</div>
+            <ul class="links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="getting-started.html">Getting Started</a></li>
+                <li><a href="api.html" class="active">API</a></li>
+                <li><a href="contributing.html">Contribute</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top:5rem;">
+        <h1 class="section-title" style="margin-top:2rem;">API Reference</h1>
+        <p class="section-subtitle">Complete reference for the GlyphWeaveForge builder API, types, and configuration options.</p>
+
+        <section style="padding-top:2rem;">
+
+            <!-- Forge -->
+            <div class="api-item">
+                <h3>Forge</h3>
+                <p class="desc">The main entrypoint. A fluent builder for Markdown-to-PDF conversion.</p>
+<pre><code><span class="hl-kw">pub struct</span> <span class="hl-ty">Forge</span>&lt;<span class="hl-str">'a</span>&gt; { <span class="hl-cmt">/* private */</span> }
+
+<span class="hl-kw">impl</span>&lt;<span class="hl-str">'a</span>&gt; Forge&lt;<span class="hl-str">'a</span>&gt; {
+    <span class="hl-cmt">/// Creates a new builder with defaults:</span>
+    <span class="hl-cmt">/// - backend: Minimal</span>
+    <span class="hl-cmt">/// - page size: A4</span>
+    <span class="hl-cmt">/// - layout: Paged</span>
+    <span class="hl-cmt">/// - theme: Professional</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">new</span>() -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Feed markdown from a string slice.</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">from_text</span>(<span class="hl-kw">self</span>, md: <span class="hl-ty">&amp;'a str</span>) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Feed markdown from a byte slice (UTF-8).</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">from_bytes</span>(<span class="hl-kw">self</span>, bytes: <span class="hl-ty">&amp;'a [u8]</span>) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Read markdown from a filesystem path (requires `fs` feature).</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">from_path</span>(<span class="hl-kw">self</span>, path: <span class="hl-ty">&amp;'a Path</span>) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Write PDF to an explicit file path (requires `fs` feature).</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">to_file</span>(<span class="hl-kw">self</span>, path: <span class="hl-ty">&amp;'a Path</span>) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Write PDF into a directory (requires `fs` feature).</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">to_dir</span>(<span class="hl-kw">self</span>, dir: <span class="hl-ty">&amp;'a Path</span>) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Return PDF bytes in memory.</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">to_memory</span>(<span class="hl-kw">self</span>) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Set a custom output file name (for directory targets).</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">with_file_name</span>(<span class="hl-kw">self</span>, name: <span class="hl-ty">&amp;'a str</span>) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Choose a built-in theme.</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">with_theme</span>(<span class="hl-kw">self</span>, theme: <span class="hl-ty">BuiltInTheme</span>) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Merge a JSON object as theme overrides.</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">with_theme_json</span>(<span class="hl-kw">self</span>, json: <span class="hl-ty">&amp;'a str</span>) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Select a renderer backend.</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">with_backend</span>(<span class="hl-kw">self</span>, backend: <span class="hl-ty">RenderBackendSelection</span>) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Set page size (A4, Letter, Legal).</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">with_page_size</span>(<span class="hl-kw">self</span>, size: <span class="hl-ty">PageSize</span>) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Set layout mode (Paged, SinglePage).</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">with_layout</span>(<span class="hl-kw">self</span>, mode: <span class="hl-ty">LayoutMode</span>) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Provide a closure that resolves image/resource paths.</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">with_resource_resolver</span>&lt;<span class="hl-ty">F</span>&gt;(<span class="hl-kw">self</span>, resolver: <span class="hl-ty">F</span>) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Provide a pre-built ConvertOptions struct.</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">with_options</span>(<span class="hl-kw">self</span>, opts: <span class="hl-ty">ConvertOptions</span>&lt;<span class="hl-str">'a</span>&gt;) -> <span class="hl-ty">Self</span>;
+
+    <span class="hl-cmt">/// Run the full conversion pipeline. Returns PdfOutput or ForgeError.</span>
+    <span class="hl-kw">pub fn</span> <span class="hl-fn">convert</span>(<span class="hl-kw">self</span>) -> <span class="hl-ty">Result</span>&lt;<span class="hl-ty">PdfOutput</span>&gt;;
+}</code></pre>
+            </div>
+
+            <!-- PdfOutput -->
+            <div class="api-item">
+                <h3>PdfOutput</h3>
+                <p class="desc">The result of a successful conversion.</p>
+<pre><code><span class="hl-kw">pub struct</span> <span class="hl-ty">PdfOutput</span> {
+    <span class="hl-cmt">/// The raw PDF bytes (always populated for to_memory).</span>
+    <span class="hl-kw">pub</span> bytes: <span class="hl-ty">Option</span>&lt;<span class="hl-ty">Vec</span>&lt;<span class="hl-ty">u8</span>&gt;&gt;,
+    <span class="hl-cmt">/// The file path where the PDF was written (for to_file / to_dir).</span>
+    <span class="hl-kw">pub</span> path: <span class="hl-ty">Option</span>&lt;<span class="hl-ty">PathBuf</span>&gt;,
+    <span class="hl-cmt">/// Number of pages generated.</span>
+    <span class="hl-kw">pub</span> pages: <span class="hl-ty">usize</span>,
+}</code></pre>
+            </div>
+
+            <!-- BuiltInTheme -->
+            <div class="api-item">
+                <h3>BuiltInTheme</h3>
+                <p class="desc">Enum of available theme presets.</p>
+<pre><code><span class="hl-kw">pub enum</span> <span class="hl-ty">BuiltInTheme</span> {
+    <span class="hl-ty">Professional</span>,       <span class="hl-cmt">// Clean, modern defaults (default)</span>
+    <span class="hl-ty">Engineering</span>,        <span class="hl-cmt">// Monospace-friendly, blue accents</span>
+    <span class="hl-ty">ScientificArticle</span>,  <span class="hl-cmt">// Serif body, structured headings</span>
+    <span class="hl-ty">Invoice</span>,             <span class="hl-cmt">// Compact tables, right-aligned amounts</span>
+    <span class="hl-ty">Informational</span>,       <span class="hl-cmt">// High-contrast, accessible</span>
+}</code></pre>
+            </div>
+
+            <!-- PageSize -->
+            <div class="api-item">
+                <h3>PageSize</h3>
+                <p class="desc">Standard paper sizes.</p>
+<pre><code><span class="hl-kw">pub enum</span> <span class="hl-ty">PageSize</span> {
+    <span class="hl-ty">A4</span>,       <span class="hl-cmt">// 210 &times; 297 mm (default)</span>
+    <span class="hl-ty">Letter</span>,   <span class="hl-cmt">// 216 &times; 279 mm</span>
+    <span class="hl-ty">Legal</span>,    <span class="hl-cmt">// 216 &times; 356 mm</span>
+}</code></pre>
+            </div>
+
+            <!-- LayoutMode -->
+            <div class="api-item">
+                <h3>LayoutMode</h3>
+                <p class="desc">Page layout strategy.</p>
+<pre><code><span class="hl-kw">pub enum</span> <span class="hl-ty">LayoutMode</span> {
+    <span class="hl-ty">Paged</span>,       <span class="hl-cmt">// Multi-page with breaks (default)</span>
+    <span class="hl-ty">SinglePage</span>,  <span class="hl-cmt">// Continuous single page</span>
+}</code></pre>
+            </div>
+
+            <!-- RenderBackendSelection -->
+            <div class="api-item">
+                <h3>RenderBackendSelection</h3>
+                <p class="desc">Which backend to use for PDF rendering.</p>
+<pre><code><span class="hl-kw">pub enum</span> <span class="hl-ty">RenderBackendSelection</span> {
+    <span class="hl-ty">Minimal</span>,   <span class="hl-cmt">// Lightweight, zero system deps (default)</span>
+    <span class="hl-ty">Typst</span>,     <span class="hl-cmt">// Professional typesetting (requires renderer-typst feature)</span>
+}</code></pre>
+            </div>
+
+            <!-- ForgeError -->
+            <div class="api-item">
+                <h3>ForgeError</h3>
+                <p class="desc">All errors returned by the library use <code>ForgeError</code> (implementing <code>std::error::Error</code> via <code>thiserror</code>).</p>
+<pre><code><span class="hl-kw">pub enum</span> <span class="hl-ty">ForgeError</span> {
+    <span class="hl-ty">MissingSource</span>,               <span class="hl-cmt">// No markdown source set</span>
+    <span class="hl-ty">MissingOutput</span>,               <span class="hl-cmt">// No output target set</span>
+    <span class="hl-ty">InputRead</span> { path, source },  <span class="hl-cmt">// File read failure</span>
+    <span class="hl-ty">InvalidUtf8</span>(..),             <span class="hl-cmt">// Non-UTF-8 bytes</span>
+    <span class="hl-ty">Parse</span> { message },           <span class="hl-cmt">// Markdown parse error</span>
+    <span class="hl-ty">Resource</span> { target, msg },    <span class="hl-cmt">// Resource resolution failure</span>
+    <span class="hl-ty">InvalidConfiguration</span> { .. },  <span class="hl-cmt">// Bad theme/config value</span>
+    <span class="hl-ty">RenderFailed</span> { message },    <span class="hl-cmt">// Backend renderer error</span>
+    <span class="hl-ty">UnsupportedFeature</span>(..),      <span class="hl-cmt">// Feature not enabled</span>
+}</code></pre>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>
+                <a href="https://crates.io/crates/glyphweaveforge" target="_blank">crates.io</a> &middot;
+                <a href="https://github.com/GustavoGutierrez/glyph-weave-forge" target="_blank">GitHub</a> &middot;
+                <a href="https://docs.rs/glyphweaveforge" target="_blank">docs.rs</a>
+            </p>
+            <p style="margin-top:0.5rem;">GlyphWeaveForge — MIT License — Gustavo Gutiérrez</p>
+        </div>
+    </footer>
+</body>
+</html>
