@@ -115,7 +115,7 @@ fn manifest_keeps_required_publication_metadata_honest() {
 
     for required_field in [
         "description = ",
-        "license = \"Apache-2.0\"",
+        "license = \"MIT\"",
         "rust-version = \"1.85\"",
         "repository = \"https://github.com/GustavoGutierrez/glyph-weave-forge\"",
         "readme = \"README.md\"",
@@ -156,8 +156,8 @@ fn public_docs_describe_real_features_and_limitations() {
         "with_resource_resolver",
         "basic HTML `<img>` tags with `src`/`alt`",
         "- tables",
-        "does **not** add real Mermaid rendering",
-        "does **not** add real math layout",
+        "Mermaid fenced-block rendering",
+        "real Typst math rendering",
         "broader HTML layout is not",
     ] {
         assert!(
@@ -178,7 +178,7 @@ fn public_artifacts_do_not_embed_local_machine_paths() {
             "C:\\\\",
             ".config/opencode",
             "/.cargo/",
-            "meridian",
+            "localuser",
         ] {
             assert!(
                 !public_text.contains(forbidden),

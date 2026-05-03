@@ -1,4 +1,4 @@
-![GlyphWeaveForge logo](logo.png)
+![GlyphWeaveForge](https://raw.githubusercontent.com/GustavoGutierrez/glyph-weave-forge/main/glyphweaveforge.webp)
 
 # GlyphWeaveForge
 
@@ -24,7 +24,7 @@ The crate ships a lightweight built-in renderer by default and can optionally us
 
 ```toml
 [dependencies]
-glyphweaveforge = "0.1.3"
+glyphweaveforge = "0.1.5"
 ```
 
 Enable optional features when you need them:
@@ -118,6 +118,17 @@ Custom page sizes must be strictly positive.
 - `heading_scale`
 - `margin_mm`
 
+The Typst backend applies the full theme profile, including fonts, colors,
+margins, body/code sizes, and heading scale. The default minimal backend is a
+fallback PDF writer; it applies layout-affecting values such as margins and font
+sizes, while color and font-family overrides are represented only in the resolved
+theme profile.
+
+Current theme profiles do not yet expose explicit controls for line height,
+paragraph alignment/indentation, multi-column layout, or page background color.
+Built-in presets therefore approximate those style guides through currently
+supported properties (fonts, sizes, heading scale, margins, and palette).
+
 Example:
 
 ```rust
@@ -177,8 +188,9 @@ If you need complete control, `with_renderer(...)` accepts any type implementing
 - `renderer-minimal` (default): keeps the built-in lightweight renderer enabled and addressable in tests/documentation.
 - `renderer-typst`: enables the Typst-backed renderer.
 - `typst`: compatibility alias for `renderer-typst`.
-- `mermaid`: currently does **not** add real Mermaid rendering; fenced `mermaid` blocks remain visible as explicit unsupported fallbacks.
-- `math`: currently does **not** add real math layout; fenced `math` blocks remain visible as explicit unsupported fallbacks.
+- `mermaid`: enables a Rust-native Mermaid subset renderer for the Typst backend (no Node/npm/network required). Unsupported Mermaid syntax remains visible through explicit fallback notices.
+- Mermaid fenced-block rendering is available through this Rust-native subset renderer.
+- `math`: enables GFM math parsing (`$...$`, `$$...$$`) and TeX-subset conversion for real Typst math rendering. The minimal renderer remains a readable text fallback.
 
 ## Current Markdown behavior
 
@@ -206,11 +218,19 @@ Resource handling behavior:
 Unsupported advanced Markdown stays visible instead of silently disappearing. Examples include:
 
 - footnotes
-- Mermaid diagrams
-- math fences
+- Mermaid diagrams (Rust-native rendering on Typst for supported subset types when `mermaid` + `renderer-typst` are enabled; unsupported syntax remains explicit fallback)
+- unsupported TeX environments/commands are surfaced as visible conversion notices in Typst output
 - unsupported raw HTML beyond basic `<img>` extraction
 
 These paths render deterministic fallback labels with the original content preserved in the output when possible.
+
+### Math support details
+
+- Inline math uses `$...$` and display math uses `$$...$$` in Markdown.
+- The Typst backend renders real math with Typst delimiters after converting a practical TeX subset.
+- Supported subset includes `\frac`, `\sqrt`, grouped superscripts/subscripts, `\sum`, `\prod`, `\int`, `\lim`, common Greek letters (`\alpha`, `\beta`, `\gamma`, `\delta`, `\lambda`, `\pi`, `\sigma`, `\Omega`, `\Delta`), symbols (`\pm`, `\infty`, `\approx`, `\neq`, `\leq`, `\geq`, `\le`, `\ge`, `\to`, `\cdot`, `\times`), spacing/wrappers (`\,`, `\qquad`, `\left`, `\right`), and common functions (`\sin`, `\cos`, `\exp`, `\partial`).
+- Unsupported environments (`\begin{...}` / `\end{...}`) and unknown commands produce explicit, visible error notices in Typst output instead of silent data loss.
+- Fenced code blocks like <code>```math</code> are still treated as code fences (honest fallback), not as math AST nodes.
 
 ## Extending the crate
 

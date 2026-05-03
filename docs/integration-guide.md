@@ -17,14 +17,14 @@ Minimal renderer only:
 
 ```toml
 [dependencies]
-glyphweaveforge = "0.1.3"
+glyphweaveforge = "0.1.5"
 ```
 
 Typst renderer enabled:
 
 ```toml
 [dependencies]
-glyphweaveforge = { version = "0.1.3", features = ["renderer-typst"] }
+glyphweaveforge = { version = "0.1.5", features = ["renderer-typst"] }
 ```
 
 ## Recommended usage
@@ -141,9 +141,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Feature compatibility matrix
 
-### Validated in the published crate `0.1.3`
+### Validated in the published crate `0.1.5`
 
-Validated from a separate consumer project depending on `glyphweaveforge = "0.1.3"`
+Validated from a separate consumer project depending on `glyphweaveforge = "0.1.5"`
 from crates.io:
 
 - UTF-8 text renders visibly
@@ -158,9 +158,9 @@ from crates.io:
 - standard Markdown tables render as real tables
 - built-in themes generate non-blank PDFs
 
-### Limitations in the published crate `0.1.3`
+### Limitations in the published crate `0.1.5`
 
-The published `0.1.3` crate still has these limits:
+The published `0.1.5` crate still has these limits:
 
 - footnotes render as fallbacks
 - Mermaid fences render as visible fallbacks
@@ -219,7 +219,7 @@ If your PDF appears blank in another project:
 
 ## Honest status summary
 
-If you need **published crates.io `0.1.3` exactly as-is**, it is safe for:
+If you need **published crates.io `0.1.5` exactly as-is**, it is safe for:
 
 - headings
 - lists

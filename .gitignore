@@ -1,2 +1,18 @@
 /target
 /.atl
+/sdd/
+
+# Sensitive files
+.env
+.env.*
+!.env.example
+!.env.template
+!.env.sample
+
+# Editor artifacts
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.bak

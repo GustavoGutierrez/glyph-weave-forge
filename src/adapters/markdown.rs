@@ -108,7 +108,8 @@ fn parse_document(markdown: &str) -> Document {
     let options = Options::ENABLE_TABLES
         | Options::ENABLE_STRIKETHROUGH
         | Options::ENABLE_TASKLISTS
-        | Options::ENABLE_FOOTNOTES;
+        | Options::ENABLE_FOOTNOTES
+        | Options::ENABLE_MATH;
 
     for event in Parser::new_ext(markdown, options) {
         if let Some(capture) = unsupported.as_mut() {
@@ -150,7 +151,11 @@ fn parse_document(markdown: &str) -> Document {
                 Event::SoftBreak | Event::HardBreak => code.push('\n'),
                 Event::End(TagEnd::CodeBlock) => {
                     if let Some((language, code)) = code_block.take() {
-                        blocks.push(Block::Code { language, code });
+                        if matches!(language.as_deref(), Some("mermaid")) {
+                            blocks.push(Block::Mermaid { source: code });
+                        } else {
+                            blocks.push(Block::Code { language, code });
+                        }
                     }
                 }
                 _ => {}
@@ -299,10 +304,27 @@ fn parse_document(markdown: &str) -> Document {
                     state.push(Inline::HardBreak);
                 }
             }
-            Event::InlineMath(text) | Event::DisplayMath(text) => {
+            Event::InlineMath(text) => {
                 if let Some(state) = inline_state.as_mut() {
-                    state.push(Inline::Code(text.to_string()));
+                    state.push(Inline::Math(text.to_string()));
                 }
+            }
+            Event::DisplayMath(text) => {
+                let tex = text.to_string();
+                if table_state.is_some() || list_state.is_some() || quote_depth > 0 {
+                    if let Some(state) = inline_state.as_mut() {
+                        state.push(Inline::Math(tex));
+                    }
+                    continue;
+                }
+
+                if let Some(state) = inline_state.take() {
+                    let content = state.finish();
+                    if !content.is_empty() {
+                        blocks.push(Block::Paragraph { content });
+                    }
+                }
+                blocks.push(Block::Math { tex });
             }
             Event::Start(Tag::Table(alignments)) => {
                 table_state = Some(TableState::new(
@@ -414,9 +436,14 @@ fn handle_table_event(
                 state.push(Inline::HardBreak);
             }
         }
-        Event::InlineMath(text) | Event::DisplayMath(text) => {
+        Event::InlineMath(text) => {
             if let Some(state) = inline_state.as_mut() {
-                state.push(Inline::Code(text.to_string()));
+                state.push(Inline::Math(text.to_string()));
+            }
+        }
+        Event::DisplayMath(text) => {
+            if let Some(state) = inline_state.as_mut() {
+                state.push(Inline::Math(text.to_string()));
             }
         }
         Event::TaskListMarker(checked) => {
@@ -429,7 +456,11 @@ fn handle_table_event(
             }
         }
         Event::End(TagEnd::Table) => {
-            let table = table_state.take().expect("table state should exist");
+            let table = match table_state.take() {
+                Some(t) => t,
+                // Mismatched End(Table) without Start(Table) — malformed Markdown, skip gracefully
+                None => return true,
+            };
             blocks.push(Block::Table {
                 alignments: table.alignments,
                 headers: table.headers,
@@ -465,6 +496,7 @@ fn pop_frame(state: &mut Option<InlineState>) {
 fn inline_to_plain_text(inline: &Inline) -> String {
     match inline {
         Inline::Text(text) | Inline::Code(text) => text.clone(),
+        Inline::Math(text) => text.clone(),
         Inline::Emphasis(children) | Inline::Strong(children) => children
             .iter()
             .map(inline_to_plain_text)
