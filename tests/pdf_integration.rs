@@ -1,6 +1,8 @@
 use glyphweaveforge::Forge;
 #[cfg(feature = "renderer-typst")]
 use glyphweaveforge::{LayoutMode, RenderBackendSelection};
+#[cfg(all(feature = "renderer-typst", feature = "mermaid", feature = "fs"))]
+use std::path::Path;
 
 fn pdf_text(bytes: &[u8]) -> String {
     String::from_utf8_lossy(bytes).into_owned()
@@ -85,4 +87,29 @@ fn single_page_layout_produces_valid_pdf() {
         bytes.starts_with(b"%PDF"),
         "output should be a valid PDF (starts with %PDF)"
     );
+}
+
+#[cfg(all(feature = "renderer-typst", feature = "mermaid", feature = "fs"))]
+#[test]
+fn engineering_article_mermaid_blocks_render_without_fallback_markers() {
+    let temp = tempfile::tempdir().expect("tempdir should exist");
+    let typst_debug = temp.path().join("article.typ");
+    unsafe { std::env::set_var("GLYPHWEAVEFORGE_DEBUG_TYPST_PATH", &typst_debug) };
+
+    let result = Forge::new()
+        .from_path(Path::new(
+            "examples/markdown/mermaid-engineering-article.md",
+        ))
+        .to_memory()
+        .with_backend(RenderBackendSelection::Typst)
+        .convert();
+
+    unsafe { std::env::remove_var("GLYPHWEAVEFORGE_DEBUG_TYPST_PATH") };
+    assert!(
+        result.is_ok(),
+        "article conversion should succeed: {result:?}"
+    );
+
+    let typst = std::fs::read_to_string(&typst_debug).expect("debug typst should exist");
+    assert!(!typst.contains("[unsupported:mermaid]"));
 }

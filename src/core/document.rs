@@ -30,6 +30,12 @@ pub enum Block {
         language: Option<String>,
         code: String,
     },
+    Mermaid {
+        source: String,
+    },
+    Math {
+        tex: String,
+    },
     Image {
         alt: String,
         asset: ResolvedAsset,
@@ -58,6 +64,7 @@ pub enum TableAlignment {
 pub enum Inline {
     Text(String),
     Code(String),
+    Math(String),
     Emphasis(Vec<Inline>),
     Strong(Vec<Inline>),
     Link { label: Vec<Inline>, target: String },

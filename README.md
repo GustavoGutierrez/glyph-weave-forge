@@ -337,6 +337,12 @@ Created by **Gustavo Gutiérrez** — Bogotá, Colombia.
 - GitHub: [@GustavoGutierrez](https://github.com/GustavoGutierrez)
 - crates.io: [glyphweaveforge](https://crates.io/crates/glyphweaveforge)
 
+## Support
+
+If GlyphWeaveForge has been useful to you, consider supporting development:
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z81YYSUI)
+
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.

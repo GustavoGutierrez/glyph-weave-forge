@@ -9,7 +9,7 @@ use crate::core::ports::{
     MarkdownParser, RenderRequest, ResourceContext, ResourceResolver, ResourceStatus,
 };
 use crate::core::{Block, Document, ForgeError, Inline, Result};
-use crate::math::preprocess_math_blocks;
+use crate::math::normalize_markdown;
 use crate::pipeline::output::write_output;
 
 #[derive(Debug, Clone)]
@@ -90,7 +90,7 @@ fn normalize_path(path: &Path) -> Result<NormalizedInput> {
 
 fn normalize_text(markdown: Cow<'_, str>, source_name: &str) -> NormalizedInput {
     let normalized = markdown.replace("\r\n", "\n").replace('\r', "\n");
-    let preprocessed = preprocess_math_blocks(&normalized);
+    let preprocessed = normalize_markdown(&normalized);
     NormalizedInput {
         markdown: preprocessed,
         source_name: source_name.to_owned(),

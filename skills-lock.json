@@ -10,6 +10,18 @@
       "source": "markdown-viewer/skills",
       "sourceType": "github",
       "computedHash": "2d2150dceb8524b9f9d11c303475183b5312dfc9d3b4deaa7d60f63ea2487953"
+    },
+    "skill-creator": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/skill-creator/SKILL.md",
+      "computedHash": "5ea13a6d9f0d4bb694405d79acd00cadec0d21bb138c4dd10fcf3c500cb835c2"
+    },
+    "writing-specs-designs": {
+      "source": "oldwinter/skills",
+      "sourceType": "github",
+      "skillPath": "lenny-skills/product-skills/writing-specs-designs/SKILL.md",
+      "computedHash": "3d92be043ac441e1fc3ae1cd927b5ce1dadf628cec8a523b5b0ffb52e90e7d56"
     }
   }
 }

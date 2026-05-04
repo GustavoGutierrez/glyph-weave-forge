@@ -1,6 +1,7 @@
 /target
 /.atl
 /sdd/
+/validation/
 
 # Sensitive files
 .env
